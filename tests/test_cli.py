@@ -7,6 +7,26 @@ from pathlib import Path
 
 
 class CliTests(unittest.TestCase):
+    def test_audit_demo_builds_scorecard(self):
+        with tempfile.TemporaryDirectory() as directory:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "open_market_eval",
+                    "audit-demo",
+                    "--output",
+                    directory,
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertTrue((Path(directory) / "scorecard.json").exists())
+            self.assertTrue((Path(directory) / "scorecard.md").exists())
+            self.assertIn("10 A-share backtest audit cases", completed.stdout)
+
     def test_demo_builds_scorecard(self):
         with tempfile.TemporaryDirectory() as directory:
             completed = subprocess.run(

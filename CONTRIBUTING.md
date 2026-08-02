@@ -2,6 +2,12 @@
 
 OpenMarketEval welcomes small, auditable contributions that improve A-share research-agent evaluation and market-event forecasting.
 
+## Submit an Arena result
+
+Run `python -m open_market_eval audit-demo`, replace the format fixture with your Agent output, and use the **Submit an Agent result** issue template. Include the exact Agent and model version, reproduction command, runtime environment, raw JSONL, and generated scorecard. Do not remove failed cases.
+
+Development-pack results are engineering evidence, not hidden-test rankings. Maintainers will reject screenshot-only scores, undisclosed human editing, incomplete artifacts, or investment-performance framing.
+
 ## Propose an A-share task
 
 Use the [A-share task proposal](https://github.com/Alfonsobang/open-market-eval/issues/new?template=a-share-task.yml) for filing search, point-in-time QA, event forecasting, backtest audit, or research-memo tasks. A useful proposal includes:

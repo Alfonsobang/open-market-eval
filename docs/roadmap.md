@@ -1,5 +1,14 @@
 # Roadmap
 
+## v0.4: A-Share Agent Arena
+
+- [x] Launch the 10-case Backtest Forensics public development pack.
+- [x] Score precision, recall, F1, exact case accuracy, misses, and false positives.
+- [x] Publish a Harbor-style A-share backtest-audit task with a deterministic verifier.
+- [x] Add reproducible Agent-result and Arena-challenge issue contracts.
+- [ ] Accept and verify the first external Agent result.
+- [ ] Run the first sealed-label Arena round.
+
 ## v0.3: A-Share Agent Lab foundation
 
 - [x] Define five evaluation tracks: filing search, point-in-time fact QA, event forecasting, backtest audit, and research memo.

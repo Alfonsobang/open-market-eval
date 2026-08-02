@@ -5,32 +5,41 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
 
-**一个 AI 能否基于公开披露研究 A 股，查对时点数据，通过回测防泄漏审计，并给出长期保持校准的事件概率？**
+## A 股研究 Agent 联赛
 
-OpenMarketEval 正在建设一个公开的 **A 股研究 Agent 实验场**，覆盖五类真实工作：公告搜索、时点查数、事件预测、回测审计和证据化研究备忘录。
+**带上你的研究 Agent，证明它能抓出 A 股回测里偷看的未来。**
 
-它服务两类用户：需要规范研究流程但基础并不完整的 A 股研究者，以及想验证 AI 投研能力、又不愿被流畅回答和漂亮回测误导的实践者。
+OpenMarketEval 是一个面向 A 股研究 Agent 的公开联赛。首关 **Backtest Forensics / 回测取证** 包含 10 个符合 A 股市场结构的场景、8 类缺陷、干净控制组、确定性评分器和一个 Harbor 风格任务。
 
-[A 股实验场](https://alfonsobang.github.io/open-market-eval/) | [五轨任务规格](benchmarks/a-share-lab/README.md) | [English](README.md) | [开放预测轮次](live/rounds/2026-08/README.md) | [路线图](docs/roadmap.md)
+[进入联赛](https://alfonsobang.github.io/open-market-eval/) | [首关任务包](benchmarks/a-share-backtest-forensics/README.md) | [English](README.md) | [Harbor 任务](integrations/harbor/a-share-backtest-audit/) | [运营系统](docs/arena-operating-system.zh-CN.md)
 
-![A 股研究 Agent 五轨实验流程](docs/assets/a-share-agent-lab.png)
-
-## A 股研究 Agent 实验场
-
-| 轨道 | 验证什么 | 标准交付物 |
-| --- | --- | --- |
-| 公告搜索 | 是否找到截止时间前的一手正式披露 | `evidence_bundle.json` |
-| 时点查数 | 数值、期间、单位、口径和报告版本是否正确 | `fact_answer.json` |
-| 事件预测 | 是否在结果前封存概率并接受事后结算 | `forecasts.jsonl` + `seal.json` |
-| 回测审计 | 未来函数、幸存者偏差、成交和成本错误 | `audit_report.json` |
-| 研究备忘录 | 主张能否连接证据、反证、未知项与失效条件 | `memo.md` + `claim_graph.json` |
+![A 股回测取证](docs/assets/a-share-arena-forensics.png)
 
 ```bash
-python -m open_market_eval list-tracks
-python -m open_market_eval show-track --track backtest-audit
+git clone https://github.com/Alfonsobang/open-market-eval.git
+cd open-market-eval
+python -m open_market_eval audit-demo
 ```
 
-五轨目录和公共来源注册表位于 [`benchmarks/a-share-lab`](benchmarks/a-share-lab/)，均可机器读取。当前发布的是规格与首批试验入口，尚未声称任何 A 股模型排名或投资业绩。
+该命令会生成 JSON 与 Markdown 成绩单，包含精确率、召回率、F1、逐案命中率以及每个漏检和误报。仓库中的示例是手工编写的格式样例，**不是模型成绩**，并且故意漏掉两项缺陷。
+
+## 首关：Backtest Forensics
+
+| 验证什么 | 典型错误 | 评分信号 |
+| --- | --- | --- |
+| 时间完整性 | 信号晚于声称的成交价格 | 召回率 + 证据 |
+| 股票池完整性 | 用今天的成分股回放历史 | 召回率 + 逐案命中 |
+| 可成交性 | 涨停或停牌订单仍全部成交 | 召回率 + 证据 |
+| A 股交收约束 | 新买入现货仓位当日卖出 | 召回率 + 证据 |
+| 误报控制 | 时点安全、执行保守的干净场景 | 精确率 |
+
+```bash
+python -m open_market_eval score-audit \
+  --submission path/to/audit_report.jsonl \
+  --output runs/my-agent/scorecard.json
+```
+
+公开 Agent 榜目前为空。首个被接受的成绩必须披露 Agent、模型、完整命令、运行环境、原始输出和完整成绩单。开发集成绩不会被包装成隐藏测试榜单或投资业绩。
 
 ## 一分钟运行
 

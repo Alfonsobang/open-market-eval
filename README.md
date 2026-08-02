@@ -5,32 +5,41 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
 
-**Can an AI research China A-shares from public filings, retrieve the right point-in-time facts, survive a leakage audit, and make forecasts that remain calibrated?**
+## A-Share Agent Arena
 
-OpenMarketEval is building a public **A-Share Agent Lab** for five real research workflows: filing search, point-in-time fact QA, event forecasting, backtest audit, and evidence-linked research memos.
+**Bring your research Agent. Make it prove that an A-share backtest did not quietly use the future.**
 
-It is for developing A-share researchers who need a disciplined process and AI-investing practitioners who want to test agents without mistaking fluent prose or a single backtest for evidence.
+OpenMarketEval is a public league for reproducible A-share research-agent evaluation. Challenge 0 is **Backtest Forensics**: 10 market-structure-specific cases, eight defect classes, clean negative controls, deterministic scoring, and a Harbor-style task.
 
-[A-Share Lab](https://alfonsobang.github.io/open-market-eval/) | [Track specifications](benchmarks/a-share-lab/README.md) | [中文文档](README.zh-CN.md) | [Open forecast round](live/rounds/2026-08/README.md) | [Roadmap](docs/roadmap.md)
+[Enter the Arena](https://alfonsobang.github.io/open-market-eval/) | [Challenge pack](benchmarks/a-share-backtest-forensics/README.md) | [中文文档](README.zh-CN.md) | [Harbor task](integrations/harbor/a-share-backtest-audit/) | [Operating system](docs/arena-operating-system.zh-CN.md)
 
-![A-Share Agent Lab workflow](docs/assets/a-share-agent-lab.png)
-
-## A-Share Agent Lab
-
-| Track | What it tests | Primary output |
-| --- | --- | --- |
-| Filing search | Direct, pre-cutoff evidence from official disclosures | `evidence_bundle.json` |
-| Point-in-time fact QA | Value, period, unit, entity scope, and report version | `fact_answer.json` |
-| Event forecasting | Sealed probabilities before objective outcomes | `forecasts.jsonl` + `seal.json` |
-| Backtest audit | Look-ahead, survivorship, execution, universe, and cost errors | `audit_report.json` |
-| Research memo | Claims linked to evidence, counterevidence, unknowns, and falsifiers | `memo.md` + `claim_graph.json` |
+![A-share backtest forensics](docs/assets/a-share-arena-forensics.png)
 
 ```bash
-python -m open_market_eval list-tracks
-python -m open_market_eval show-track --track backtest-audit
+git clone https://github.com/Alfonsobang/open-market-eval.git
+cd open-market-eval
+python -m open_market_eval audit-demo
 ```
 
-The five-track catalog and public source registry are machine-readable in [`benchmarks/a-share-lab`](benchmarks/a-share-lab/). The specification is public; no A-share model ranking or investment performance is claimed yet.
+The command produces a JSON and Markdown scorecard with precision, recall, F1, exact case accuracy, and every missed or invented defect. The included example is a manually authored format fixture, **not a model result**, and deliberately misses two defects.
+
+## Challenge 0: Backtest Forensics
+
+| What is tested | Example failure | Score signal |
+| --- | --- | --- |
+| Temporal integrity | Signal formed after the claimed fill | Recall + evidence |
+| Universe integrity | Today's constituents projected into history | Recall + exact case |
+| Executability | Limit-up or suspended orders filled in full | Recall + evidence |
+| A-share settlement | Same-day sale of a newly purchased cash-equity position | Recall + evidence |
+| False-positive control | A conservative, point-in-time-safe setup | Precision |
+
+```bash
+python -m open_market_eval score-audit \
+  --submission path/to/audit_report.jsonl \
+  --output runs/my-agent/scorecard.json
+```
+
+Public Agent rankings are currently empty. The first accepted result must disclose the Agent, model, exact command, environment, raw output, and complete scorecard. Development-pack scores are never presented as hidden-test rankings or investment performance.
 
 ## One-minute demo
 

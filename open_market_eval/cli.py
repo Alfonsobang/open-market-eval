@@ -6,6 +6,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .audit import render_audit_markdown, score_audit_submission
 from .harness import run_agent
 from .io import read_jsonl, write_json, write_jsonl
 from .ledger import seal_files, verify_seal
@@ -100,11 +101,40 @@ def command_demo(output: Path) -> None:
     print(f"Report: {output / 'scorecard.md'}")
 
 
+def command_audit_demo(output: Path) -> None:
+    root = Path(__file__).resolve().parents[1] / "benchmarks" / "a-share-backtest-forensics"
+    output.mkdir(parents=True, exist_ok=True)
+    submission_path = output / "audit_report.jsonl"
+    shutil.copyfile(root / "example-submission.jsonl", submission_path)
+    score = score_audit_submission(
+        read_jsonl(submission_path), read_jsonl(root / "labels.jsonl")
+    )
+    write_json(output / "scorecard.json", score)
+    (output / "scorecard.md").write_text(render_audit_markdown(score), encoding="utf-8")
+    print(f"Scored {score['case_count']} A-share backtest audit cases")
+    print(f"Precision: {score['precision']:.1%}")
+    print(f"Recall: {score['recall']:.1%}")
+    print(f"F1: {score['f1']:.1%}")
+    print(f"Report: {output / 'scorecard.md'}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="open-market-eval")
     subparsers = parser.add_subparsers(dest="action", required=True)
     demo = subparsers.add_parser("demo", help="run the sealed synthetic forecasting loop")
     demo.add_argument("--output", default="runs/demo", type=Path)
+    audit_demo = subparsers.add_parser(
+        "audit-demo", help="run the A-share backtest forensics development pack"
+    )
+    audit_demo.add_argument("--output", default="runs/audit-demo", type=Path)
+    audit_score = subparsers.add_parser(
+        "score-audit", help="score an A-share backtest audit submission"
+    )
+    audit_score.add_argument("--submission", required=True)
+    audit_score.add_argument(
+        "--labels", default="benchmarks/a-share-backtest-forensics/labels.jsonl"
+    )
+    audit_score.add_argument("--output", default="runs/audit-scorecard.json")
     validate = subparsers.add_parser("validate", help="validate temporal integrity and schemas")
     validate.add_argument("--questions", required=True)
     validate.add_argument("--forecasts", required=True)
@@ -148,6 +178,19 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.action == "demo":
             command_demo(args.output)
+        elif args.action == "audit-demo":
+            command_audit_demo(args.output)
+        elif args.action == "score-audit":
+            result = score_audit_submission(
+                read_jsonl(args.submission), read_jsonl(args.labels)
+            )
+            write_json(args.output, result)
+            Path(args.output).with_suffix(".md").write_text(
+                render_audit_markdown(result), encoding="utf-8"
+            )
+            print(f"Precision: {result['precision']:.1%}")
+            print(f"Recall: {result['recall']:.1%}")
+            print(f"F1: {result['f1']:.1%}")
         elif args.action == "validate":
             validate_bundle(args.questions, args.forecasts, args.resolutions)
             print("Validation passed")
@@ -196,10 +239,10 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(tracks[args.track], ensure_ascii=False, indent=2, sort_keys=True))
         elif args.action == "build-site":
             root = Path(__file__).resolve().parents[1]
-            smoke = root / "benchmarks" / "synthetic-smoke"
-            result = score_forecasts(
-                read_jsonl(smoke / "forecasts.jsonl"),
-                read_jsonl(smoke / "resolutions.jsonl"),
+            audit_root = root / "benchmarks" / "a-share-backtest-forensics"
+            result = score_audit_submission(
+                read_jsonl(audit_root / "example-submission.jsonl"),
+                read_jsonl(audit_root / "labels.jsonl"),
             )
             questions_path = Path(args.questions)
             if not questions_path.is_absolute():
@@ -209,8 +252,9 @@ def main(argv: list[str] | None = None) -> int:
                 read_jsonl(questions_path),
                 load_a_share_tracks(root),
                 json.loads((root / "benchmarks" / "a-share-lab" / "sources.json").read_text(encoding="utf-8")),
+                read_jsonl(audit_root / "cases.jsonl"),
                 args.output,
-                root / "docs" / "assets" / "a-share-agent-lab.png",
+                root / "docs" / "assets" / "a-share-arena-forensics.png",
             )
             print(f"Site: {args.output / 'index.html'}")
     except (OSError, ValueError, RuntimeError) as exc:

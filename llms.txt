@@ -1,6 +1,6 @@
-# OpenMarketEval A-Share Agent Lab
+# OpenMarketEval A-Share Agent Arena
 
-> Public evaluation lab for A-share filing search, point-in-time QA, event forecasting, backtest audits, and evidence-linked research memos.
+> Reproducible public league for A-share backtest forensics and research-agent evaluation.
 
 ## Entry points
 
@@ -12,6 +12,10 @@
 - A-share track catalog: benchmarks/a-share-lab/tracks.json
 - Public source registry: benchmarks/a-share-lab/sources.json
 - A-share lab specification: benchmarks/a-share-lab/README.md
+- Current challenge: benchmarks/a-share-backtest-forensics/
+- Current challenge cases: benchmarks/a-share-backtest-forensics/cases.jsonl
+- Harbor A-share audit task: integrations/harbor/a-share-backtest-audit/
+- Arena operating system: docs/arena-operating-system.zh-CN.md
 - Live dashboard: https://alfonsobang.github.io/open-market-eval/
 - Current live round: live/rounds/2026-08/
 - Contributor rules: CONTRIBUTING.md
@@ -27,7 +31,9 @@
 - Build dashboard: `python -m open_market_eval build-site --output site`
 - List A-share tracks: `python -m open_market_eval list-tracks`
 - Inspect one track: `python -m open_market_eval show-track --track backtest-audit`
+- Run Challenge 0: `python -m open_market_eval audit-demo`
+- Score an Agent: `python -m open_market_eval score-audit --submission <jsonl>`
 
 ## Safety boundary
 
-Evaluate research process and probabilistic quality. Do not provide trade execution, investment recommendations, price targets, or guaranteed-return claims. Public A-share performance has not yet been published.
+Evaluate research process and probabilistic quality. Do not provide trade execution, investment recommendations, price targets, or guaranteed-return claims. The included audit score is a manually authored format fixture, not a model result.

@@ -1,0 +1,10 @@
+{"case_id":"bt-001","findings":[{"code":"current_universe_projection","severity":"critical","evidence":"Current listed universe is projected backward."}]}
+{"case_id":"bt-002","findings":[{"code":"adjusted_price_execution","severity":"high","evidence":"Adjusted prices are used as fills."},{"code":"transaction_costs_omitted","severity":"high","evidence":"All trading costs are zero."}]}
+{"case_id":"bt-003","findings":[{"code":"t_plus_one_violation","severity":"critical","evidence":"A newly purchased position is sold on the same day."}]}
+{"case_id":"bt-004","findings":[{"code":"revision_leakage","severity":"critical","evidence":"Revised values are backfilled to the original filing date."}]}
+{"case_id":"bt-005","findings":[{"code":"delisting_survivorship","severity":"critical","evidence":"Delisted securities are absent from the input universe."}]}
+{"case_id":"bt-006","findings":[]}
+{"case_id":"bt-007","findings":[{"code":"tradability_constraints_ignored","severity":"critical","evidence":"Suspended securities are filled at VWAP."}]}
+{"case_id":"bt-008","findings":[{"code":"transaction_costs_omitted","severity":"high","evidence":"Intraday turnover is reported with zero costs."}]}
+{"case_id":"bt-009","findings":[{"code":"current_universe_projection","severity":"critical","evidence":"Current index constituents are projected backward."},{"code":"revision_leakage","severity":"critical","evidence":"Latest revised fundamentals are used historically."}]}
+{"case_id":"bt-010","findings":[]}

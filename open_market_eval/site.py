@@ -9,269 +9,205 @@ from typing import Any
 
 METHOD_REFERENCES = [
     {
+        "name": "Harbor",
+        "url": "https://github.com/harbor-framework/harbor",
+        "use": "容器化任务、Agent 轨迹、重复试验与程序化 verifier",
+    },
+    {
+        "name": "Microsoft Qlib",
+        "url": "https://github.com/microsoft/qlib",
+        "use": "AI 量化研究、point-in-time 数据与回测基础设施",
+    },
+    {
+        "name": "OpenBB",
+        "url": "https://github.com/OpenBB-finance/OpenBB",
+        "use": "面向分析师、量化研究者和 AI Agent 的开放数据平台",
+    },
+    {
         "name": "ForecastBench",
         "url": "https://arxiv.org/abs/2409.19839",
-        "use": "未来问题、动态题库与时间泄漏控制",
+        "use": "动态题库、未来问题和时间泄漏控制",
     },
     {
         "name": "Pitfalls in Evaluating LM Forecasters",
         "url": "https://arxiv.org/abs/2506.00723",
         "use": "识别时间泄漏和不可外推的评测结论",
     },
-    {
-        "name": "FinBench (2026 preprint)",
-        "url": "https://arxiv.org/abs/2607.16229",
-        "use": "金融预测的时间门控、校准和区间评分",
-    },
-    {
-        "name": "Harbor",
-        "url": "https://github.com/harbor-framework/harbor",
-        "use": "容器化任务、Agent 轨迹和程序化 verifier",
-    },
-    {
-        "name": "Microsoft Qlib",
-        "url": "https://github.com/microsoft/qlib",
-        "use": "AI 量化研究的数据、模型与工作流基础设施",
-    },
-    {
-        "name": "AKShare",
-        "url": "https://github.com/akfamily/akshare",
-        "use": "公开财经数据接入和原型交叉验证",
-    },
 ]
 
 
-STATUS_LABELS = {
-    "live": ("运行中", "green"),
-    "pilot": ("首批试验", "cyan"),
-    "spec": ("规格已发布", "amber"),
-    "planned": ("规划中", "gray"),
+ISSUE_NAMES = {
+    "same_close_execution": "同收盘价穿越",
+    "current_universe_projection": "当前股票池回放历史",
+    "adjusted_price_execution": "复权价虚拟成交",
+    "t_plus_one_violation": "T+1 违规",
+    "tradability_constraints_ignored": "忽略停牌/涨跌停",
+    "transaction_costs_omitted": "遗漏交易成本",
+    "revision_leakage": "修订数据提前使用",
+    "delisting_survivorship": "退市幸存者偏差",
 }
 
 
-def _status_badge(status: str) -> str:
-    label, color = STATUS_LABELS.get(status, (status, "gray"))
-    return f'<span class="badge badge-{color}">{html.escape(label)}</span>'
+def _case_buttons(cases: list[dict[str, Any]]) -> str:
+    return "".join(
+        f'<button class="case-tab{" active" if index == 0 else ""}" data-case="{html.escape(case["id"])}">'
+        f'<span>{index + 1:02d}</span>{html.escape(case["title"])}</button>'
+        for index, case in enumerate(cases)
+    )
+
+
+def _initial_case(case: dict[str, Any]) -> str:
+    return f"""
+      <p class="eyebrow" id="case-id">{html.escape(case['id'])} · PRACTICE CASE</p>
+      <h3 id="case-title">{html.escape(case['title'])}</h3>
+      <p class="case-brief" id="case-brief">{html.escape(case['brief'])}</p>
+      <div class="setup-list" id="case-setup">{''.join(f'<span>{html.escape(item)}</span>' for item in case['research_setup'])}</div>
+      <div class="case-prompt"><span>给 Agent 的任务</span><p id="case-prompt">{html.escape(case['prompt'])}</p></div>
+    """
 
 
 def _track_rows(tracks: list[dict[str, Any]]) -> str:
-    rows = []
-    for index, track in enumerate(tracks, 1):
-        metrics = " / ".join(track["metrics"][:2])
-        rows.append(
-            f'<tr><td><span class="track-index">0{index}</span></td>'
-            f'<td><button class="track-link" data-select-track="{html.escape(track["id"])}">'
-            f'<strong>{html.escape(track["name_zh"])}</strong><span>{html.escape(track["name_en"])}</span></button></td>'
-            f'<td>{_status_badge(track["status"])}</td>'
-            f'<td>{html.escape(metrics)}</td>'
-            f'<td><code>{html.escape(track["deliverable"].split("：", 1)[0])}</code></td></tr>'
-        )
-    return "".join(rows)
-
-
-def _source_rows(sources: list[dict[str, Any]]) -> str:
-    authority = {"primary": "一手来源", "secondary": "二手接口", "tool": "研究工具"}
-    rows = []
-    for source in sources:
-        rows.append(
-            f'<tr><td><a href="{html.escape(source["url"])}" target="_blank" rel="noreferrer"><strong>{html.escape(source["name"])}</strong> ↗</a>'
-            f'<span class="source-kind">{html.escape(source["kind"])}</span></td>'
-            f'<td><span class="authority authority-{html.escape(source["authority"])}">{authority[source["authority"]]}</span></td>'
-            f'<td>{html.escape(source["use_for"])}</td>'
-            f'<td>{html.escape(source["caution"])}</td></tr>'
-        )
-    return "".join(rows)
-
-
-def _method_rows() -> str:
+    status = {"live": "运行中", "pilot": "试验中", "spec": "已定义", "planned": "排队中"}
     return "".join(
-        f'<tr><td><a href="{html.escape(item["url"])}" target="_blank" rel="noreferrer"><strong>{html.escape(item["name"])}</strong> ↗</a></td><td>{html.escape(item["use"])}</td></tr>'
+        f'<tr><td>Roadmap</td><td><strong>{html.escape(track["name_zh"])}</strong><span>{html.escape(track["name_en"])}</span></td>'
+        f'<td>{html.escape(status.get(track["status"], track["status"]))}</td>'
+        f'<td>{html.escape(track["deliverable"].split("：", 1)[0])}</td>'
+        f'<td>{html.escape(" / ".join(track["metrics"][:2]))}</td></tr>'
+        for track in tracks
+    )
+
+
+def _reference_rows() -> str:
+    return "".join(
+        f'<tr><td><a href="{html.escape(item["url"])}" target="_blank" rel="noreferrer">{html.escape(item["name"])} ↗</a></td>'
+        f'<td>{html.escape(item["use"])}</td></tr>'
         for item in METHOD_REFERENCES
     )
 
 
-def _initial_track(track: dict[str, Any]) -> str:
-    return f"""
-      <div class="track-detail-head"><div><p class="kicker" id="detail-en">{html.escape(track['name_en'])}</p><h3 id="detail-name">{html.escape(track['name_zh'])}</h3></div><div id="detail-status">{_status_badge(track['status'])}</div></div>
-      <p class="detail-question" id="detail-question">{html.escape(track['question'])}</p>
-      <div class="detail-grid">
-        <div><span class="field-label">帮助用户解决</span><p id="detail-value">{html.escape(track['user_value'])}</p></div>
-        <div><span class="field-label">输入</span><p id="detail-input">{html.escape(track['input'])}</p></div>
-        <div><span class="field-label">标准交付物</span><p id="detail-deliverable">{html.escape(track['deliverable'])}</p></div>
-        <div><span class="field-label">样例任务</span><p id="detail-sample">{html.escape(track['sample_task'])}</p></div>
-      </div>
-      <div class="detail-bottom"><div><span class="field-label">评分指标</span><div class="chips" id="detail-metrics">{''.join(f'<span>{html.escape(metric)}</span>' for metric in track['metrics'])}</div></div><div><span class="field-label">重点拦截</span><ul id="detail-failures">{''.join(f'<li>{html.escape(item)}</li>' for item in track['failure_modes'])}</ul></div></div>
-      <pre><code id="detail-command">python -m open_market_eval show-track --track {html.escape(track['id'])}</code></pre>
-    """
-
-
 def render_dashboard(
-    score: dict[str, Any],
+    audit_score: dict[str, Any],
     questions: list[dict[str, Any]],
     tracks: list[dict[str, Any]],
     sources: list[dict[str, Any]],
+    cases: list[dict[str, Any]],
 ) -> str:
-    del score
-    primary_count = sum(source["authority"] == "primary" for source in sources)
-    tracks_json = json.dumps(tracks, ensure_ascii=False).replace("</", "<\\/")
-    status_json = json.dumps(STATUS_LABELS, ensure_ascii=False).replace("</", "<\\/")
-
+    cases_json = json.dumps(cases, ensure_ascii=False).replace("</", "<\\/")
+    issue_count = len(ISSUE_NAMES)
+    public_agent_count = 0
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A股研究 Agent 公共实验场：公告搜索、时点查数、事件预测、回测审计和研究备忘录。">
-  <meta name="theme-color" content="#f5f7f8">
-  <title>OpenMarketEval · A股研究 Agent 实验场</title>
+  <meta name="description" content="A 股研究 Agent 联赛：用可复现任务测试 Agent 能否抓出回测中的未来函数、幸存者偏差与不可成交假设。">
+  <meta name="theme-color" content="#f3f5f4">
+  <title>A-Share Agent Arena · OpenMarketEval</title>
   <style>
-    :root {{ --ink:#172027; --muted:#61707a; --line:#d7dfe3; --paper:#fff; --wash:#f4f7f8; --deep:#12232c; --red:#d94335; --green:#11875d; --cyan:#008fb3; --amber:#b87300; --gray:#75818a; }}
+    :root {{ --ink:#172126; --muted:#68757b; --paper:#fff; --wash:#f3f5f4; --line:#d8dedc; --deep:#12272b; --red:#d74434; --teal:#0d8f83; --amber:#bb790e; }}
     * {{ box-sizing:border-box; }}
     html {{ scroll-behavior:smooth; }}
-    body {{ margin:0; color:var(--ink); background:var(--wash); font:14px/1.55 Inter, "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif; }}
-    button, input {{ font:inherit; }}
-    a {{ color:inherit; }}
-    .shell {{ width:min(1280px, calc(100% - 36px)); margin:0 auto; }}
-    header {{ position:sticky; top:0; z-index:20; border-bottom:1px solid var(--line); background:rgba(255,255,255,.96); backdrop-filter:blur(12px); }}
-    nav {{ min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:20px; }}
-    .brand {{ display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:850; font-size:17px; }}
-    .brand-mark {{ width:23px; height:23px; border:5px solid var(--red); border-right-color:var(--green); border-bottom-color:var(--cyan); border-radius:50%; }}
-    .brand-sub {{ color:var(--muted); font-weight:600; font-size:12px; }}
-    .nav-links {{ display:flex; align-items:center; gap:20px; }}
-    .nav-links a {{ color:var(--muted); text-decoration:none; font-size:13px; }}
-    .nav-links .github {{ padding:6px 10px; border:1px solid var(--line); border-radius:5px; color:var(--ink); font-weight:750; }}
-    .workspace {{ display:grid; grid-template-columns:210px minmax(0,1fr); gap:22px; padding:22px 0 48px; }}
-    aside {{ position:sticky; top:80px; align-self:start; }}
-    .side-title {{ margin:0 0 10px; color:var(--muted); font-size:11px; font-weight:800; text-transform:uppercase; }}
-    .side-nav {{ display:flex; flex-direction:column; border-top:1px solid var(--line); }}
-    .side-nav a {{ padding:11px 4px; border-bottom:1px solid var(--line); color:var(--muted); text-decoration:none; }}
-    .side-nav a:hover {{ color:var(--ink); }}
-    .side-status {{ margin-top:24px; padding:14px 0; border-top:3px solid var(--red); border-bottom:1px solid var(--line); }}
-    .side-status strong {{ display:block; margin-bottom:5px; }} .side-status p {{ margin:0; color:var(--muted); font-size:12px; }}
-    main {{ min-width:0; }}
-    .intro {{ min-height:286px; display:grid; grid-template-columns:minmax(380px,.85fr) minmax(420px,1.15fr); border:1px solid var(--line); background:var(--paper); overflow:hidden; }}
-    .intro-copy {{ padding:30px 32px; }}
-    .kicker {{ margin:0 0 7px; color:var(--red); font-size:11px; font-weight:850; text-transform:uppercase; }}
-    h1 {{ margin:0; font-size:38px; line-height:1.12; letter-spacing:0; }}
-    .intro-copy > p:not(.kicker) {{ margin:15px 0 20px; max-width:560px; color:var(--muted); font-size:16px; }}
-    .actions {{ display:flex; gap:9px; flex-wrap:wrap; }}
-    .button {{ display:inline-flex; min-height:39px; align-items:center; justify-content:center; padding:0 13px; border:1px solid var(--ink); border-radius:5px; color:white; background:var(--ink); text-decoration:none; font-weight:750; }}
-    .button.secondary {{ color:var(--ink); background:white; }}
-    .intro-visual {{ min-height:286px; background:#fafcfc url("assets/a-share-agent-lab.png") center/cover no-repeat; border-left:1px solid var(--line); }}
-    .audience {{ display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line); border-top:0; background:var(--deep); color:white; }}
-    .persona {{ display:grid; grid-template-columns:36px 1fr; gap:12px; padding:17px 22px; }} .persona + .persona {{ border-left:1px solid rgba(255,255,255,.15); }}
-    .persona-no {{ color:#ff796c; font:800 18px/1 ui-monospace, monospace; }} .persona:nth-child(2) .persona-no {{ color:#51d3a0; }}
-    .persona strong {{ display:block; }} .persona p {{ margin:3px 0 0; color:#abc0ca; font-size:12px; }}
-    .summary {{ display:grid; grid-template-columns:repeat(4,1fr); margin-top:16px; border:1px solid var(--line); background:var(--paper); }}
-    .summary-item {{ padding:15px 18px; border-right:1px solid var(--line); }} .summary-item:last-child {{ border-right:0; }}
-    .summary-item span {{ display:block; color:var(--muted); font-size:11px; }} .summary-item strong {{ display:block; margin-top:2px; font-size:22px; }}
-    .summary-item:nth-child(1) strong {{ color:var(--red); }} .summary-item:nth-child(2) strong {{ color:var(--cyan); }} .summary-item:nth-child(3) strong {{ color:var(--green); }} .summary-item:nth-child(4) strong {{ color:var(--amber); }}
-    section {{ margin-top:22px; border:1px solid var(--line); background:var(--paper); }}
-    .section-head {{ display:flex; align-items:end; justify-content:space-between; gap:24px; padding:20px 22px; border-bottom:1px solid var(--line); }}
-    h2 {{ margin:0; font-size:23px; letter-spacing:0; }} .section-head p {{ margin:0; max-width:610px; color:var(--muted); }}
-    .table-wrap {{ overflow:auto; }}
-    table {{ width:100%; border-collapse:collapse; min-width:820px; }}
-    th, td {{ padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }} tr:last-child td {{ border-bottom:0; }}
-    th {{ color:var(--muted); background:#f7f9fa; font-size:11px; font-weight:750; text-transform:uppercase; }}
-    .track-index {{ color:#9aa5ab; font:700 12px ui-monospace, monospace; }}
-    .track-link {{ padding:0; border:0; background:transparent; color:var(--ink); cursor:pointer; text-align:left; }} .track-link strong, .track-link span {{ display:block; }} .track-link span {{ color:var(--muted); font-size:11px; }} .track-link:hover strong {{ color:var(--red); }}
-    .badge {{ display:inline-flex; padding:3px 7px; border:1px solid currentColor; border-radius:4px; font-size:10px; font-weight:800; white-space:nowrap; }}
-    .badge-green {{ color:var(--green); background:#eff9f5; }} .badge-cyan {{ color:var(--cyan); background:#eef9fb; }} .badge-amber {{ color:var(--amber); background:#fff8e9; }} .badge-gray {{ color:var(--gray); background:#f3f5f6; }}
-    code, pre {{ font-family:ui-monospace, SFMono-Regular, Consolas, monospace; }} code {{ font-size:12px; }}
-    .track-tabs {{ display:flex; overflow:auto; border-bottom:1px solid var(--line); background:#fafbfb; }}
-    .track-tab {{ min-width:max-content; padding:11px 16px; border:0; border-right:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }} .track-tab.active {{ color:var(--red); background:white; box-shadow:inset 0 -3px var(--red); font-weight:800; }}
-    .track-detail {{ padding:22px; }}
-    .track-detail-head {{ display:flex; justify-content:space-between; align-items:start; gap:20px; }} .track-detail h3 {{ margin:0; font-size:27px; }}
-    .detail-question {{ margin:12px 0 20px; font-size:16px; font-weight:650; max-width:900px; }}
-    .detail-grid {{ display:grid; grid-template-columns:repeat(2,1fr); border-top:1px solid var(--line); border-left:1px solid var(--line); }}
-    .detail-grid > div {{ min-height:112px; padding:14px 16px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }}
-    .field-label {{ display:block; margin-bottom:5px; color:var(--muted); font-size:10px; font-weight:800; text-transform:uppercase; }} .detail-grid p {{ margin:0; }}
-    .detail-bottom {{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:20px; }} .detail-bottom ul {{ margin:5px 0 0; padding-left:18px; columns:2; }}
-    .chips {{ display:flex; gap:6px; flex-wrap:wrap; }} .chips span {{ padding:4px 7px; border:1px solid var(--line); border-radius:4px; background:var(--wash); font-size:11px; }}
-    pre {{ margin:20px 0 0; padding:13px 15px; overflow:auto; border:1px solid #223943; background:var(--deep); color:#d9eef4; }}
-    .audit-layout {{ display:grid; grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr); }}
-    .checklist {{ padding:8px 22px 20px; }}
-    .check-row {{ display:grid; grid-template-columns:24px 1fr; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer; }} .check-row:last-child {{ border-bottom:0; }}
-    .check-row input {{ width:17px; height:17px; margin-top:2px; accent-color:var(--green); }} .check-row strong {{ display:block; }} .check-row span {{ display:block; color:var(--muted); font-size:12px; }}
-    .audit-score {{ display:flex; flex-direction:column; justify-content:center; padding:26px; border-left:1px solid var(--line); background:#f7f9fa; }}
-    .score-value {{ font-size:42px; font-weight:850; }} .score-value span {{ color:var(--muted); font-size:16px; }} .score-label {{ color:var(--muted); }}
-    .progress {{ height:8px; margin:13px 0; background:#dce3e6; }} .progress span {{ display:block; width:0; height:100%; background:var(--red); transition:width .2s ease, background .2s ease; }}
-    .score-message {{ margin:0; font-weight:650; }}
-    .source-kind {{ display:block; color:var(--muted); font-size:10px; }} .authority {{ font-size:11px; font-weight:800; white-space:nowrap; }} .authority-primary {{ color:var(--green); }} .authority-secondary {{ color:var(--amber); }} .authority-tool {{ color:var(--cyan); }}
-    .method-grid {{ display:grid; grid-template-columns:1fr 1fr; }} .method-grid > div:first-child {{ border-right:1px solid var(--line); }}
-    .method-grid h3 {{ margin:0; padding:16px 18px; border-bottom:1px solid var(--line); font-size:16px; }} .method-grid table {{ min-width:0; }}
-    .build-status {{ display:grid; grid-template-columns:repeat(4,1fr); }} .build-item {{ padding:17px; border-right:1px solid var(--line); }} .build-item:last-child {{ border-right:0; }} .build-item strong {{ display:block; }} .build-item span {{ color:var(--muted); font-size:11px; }}
-    .participate {{ display:grid; grid-template-columns:.9fr 1.1fr; background:var(--deep); color:white; }} .participate-copy {{ padding:26px; }} .participate h2 {{ font-size:26px; }} .participate p {{ color:#afc2cb; }} .participate-actions {{ display:flex; align-items:center; gap:10px; padding:26px; border-left:1px solid rgba(255,255,255,.15); flex-wrap:wrap; }} .participate .button {{ border-color:white; }} .participate .button.secondary {{ color:white; background:transparent; }}
-    .disclaimer {{ padding:14px 18px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; }}
-    footer {{ padding:24px 0 40px; color:var(--muted); }} .footer-line {{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }}
-    @media (max-width:1000px) {{ .workspace {{ grid-template-columns:1fr; }} aside {{ display:none; }} .intro {{ grid-template-columns:1fr 1fr; }} .summary, .build-status {{ grid-template-columns:repeat(2,1fr); }} .summary-item:nth-child(2), .build-item:nth-child(2) {{ border-right:0; }} .summary-item:nth-child(-n+2), .build-item:nth-child(-n+2) {{ border-bottom:1px solid var(--line); }} }}
-    @media (max-width:760px) {{ .shell {{ width:min(100% - 22px,1280px); }} .nav-links a:not(.github) {{ display:none; }} .brand-sub {{ display:none; }} .workspace {{ padding-top:11px; }} .intro {{ grid-template-columns:1fr; }} .intro-copy {{ padding:23px 20px; }} h1 {{ font-size:31px; }} .intro-visual {{ min-height:190px; border-left:0; border-top:1px solid var(--line); background-position:center; }} .audience {{ grid-template-columns:1fr; }} .persona + .persona {{ border-left:0; border-top:1px solid rgba(255,255,255,.15); }} .section-head {{ align-items:start; flex-direction:column; }} .detail-grid, .detail-bottom, .audit-layout, .method-grid, .participate {{ grid-template-columns:1fr; }} .detail-bottom ul {{ columns:1; }} .audit-score, .participate-actions {{ border-left:0; border-top:1px solid var(--line); }} .method-grid > div:first-child {{ border-right:0; border-bottom:1px solid var(--line); }} .track-detail {{ padding:18px 14px; }} .track-detail h3 {{ font-size:23px; }} }}
-    @media (max-width:480px) {{ .summary, .build-status {{ grid-template-columns:1fr; }} .summary-item, .build-item {{ border-right:0; border-bottom:1px solid var(--line); }} .summary-item:last-child, .build-item:last-child {{ border-bottom:0; }} .actions, .participate-actions {{ align-items:stretch; flex-direction:column; }} .button {{ width:100%; }} }}
-    @media (prefers-reduced-motion:reduce) {{ html {{ scroll-behavior:auto; }} .progress span {{ transition:none; }} }}
+    body {{ margin:0; color:var(--ink); background:var(--wash); font:14px/1.58 Inter,"PingFang SC","Microsoft YaHei",ui-sans-serif,system-ui,sans-serif; }}
+    button {{ font:inherit; }} a {{ color:inherit; }}
+    .shell {{ width:min(1180px,calc(100% - 36px)); margin:0 auto; }}
+    header {{ position:sticky; top:0; z-index:30; border-bottom:1px solid var(--line); background:rgba(255,255,255,.96); backdrop-filter:blur(10px); }}
+    nav {{ min-height:62px; display:flex; align-items:center; justify-content:space-between; gap:24px; }}
+    .brand {{ display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:850; }}
+    .brand-mark {{ width:22px; height:22px; border:5px solid var(--red); border-right-color:var(--teal); border-radius:50%; }}
+    .brand small {{ padding-left:10px; border-left:1px solid var(--line); color:var(--muted); font-size:11px; letter-spacing:0; }}
+    .nav-links {{ display:flex; align-items:center; gap:20px; }} .nav-links a {{ color:var(--muted); text-decoration:none; font-size:13px; }}
+    .nav-links .repo {{ padding:7px 11px; border:1px solid var(--line); border-radius:5px; color:var(--ink); font-weight:750; }}
+    .hero {{ min-height:508px; display:flex; align-items:center; background:#fff url("assets/a-share-arena-forensics.png") center/cover no-repeat; border-bottom:1px solid var(--line); }}
+    .hero-copy {{ width:min(600px,62%); padding:62px 0; }}
+    .eyebrow {{ margin:0 0 9px; color:var(--red); font-size:11px; font-weight:850; text-transform:uppercase; }}
+    h1 {{ margin:0; max-width:590px; font-size:52px; line-height:1.06; letter-spacing:0; }}
+    .hero-lead {{ max-width:555px; margin:20px 0 23px; color:#4f5d62; font-size:18px; }}
+    .hero-lead strong {{ color:var(--ink); }}
+    .actions {{ display:flex; gap:10px; flex-wrap:wrap; }}
+    .button {{ display:inline-flex; min-height:43px; align-items:center; justify-content:center; padding:0 15px; border:1px solid var(--ink); border-radius:5px; color:#fff; background:var(--ink); text-decoration:none; font-weight:800; }}
+    .button.secondary {{ color:var(--ink); background:#fff; }}
+    .hero-note {{ margin:18px 0 0; color:var(--muted); font-size:11px; }}
+    .stats {{ background:var(--deep); color:#fff; }} .stats-grid {{ display:grid; grid-template-columns:repeat(4,1fr); }}
+    .stat {{ min-height:92px; padding:17px 20px; border-right:1px solid rgba(255,255,255,.15); }} .stat:last-child {{ border-right:0; }}
+    .stat strong {{ display:block; color:#fff; font-size:28px; line-height:1.1; }} .stat span {{ color:#9eb2b5; font-size:11px; }}
+    .stat:nth-child(1) strong {{ color:#ff7060; }} .stat:nth-child(2) strong {{ color:#55d2c3; }} .stat:nth-child(3) strong {{ color:#efb64f; }}
+    .band {{ border-bottom:1px solid var(--line); background:var(--paper); }} .band.alt {{ background:var(--wash); }} .band.dark {{ background:var(--deep); color:#fff; }}
+    .band-inner {{ padding:54px 0; }}
+    .section-head {{ display:grid; grid-template-columns:minmax(260px,.72fr) minmax(420px,1.28fr); gap:70px; align-items:end; margin-bottom:28px; }}
+    h2 {{ margin:0; font-size:32px; line-height:1.16; letter-spacing:0; }} .section-head > p {{ margin:0; color:var(--muted); font-size:15px; }}
+    .challenge-grid {{ display:grid; grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }}
+    .challenge-copy {{ padding:28px 36px 28px 0; }} .challenge-side {{ padding:28px 0 28px 36px; border-left:1px solid var(--line); }}
+    .challenge-title {{ display:flex; justify-content:space-between; gap:20px; align-items:start; }} .challenge-title h3 {{ margin:0; font-size:25px; }}
+    .live-badge {{ padding:4px 8px; border:1px solid var(--teal); border-radius:4px; color:var(--teal); background:#effaf7; font-size:10px; font-weight:850; white-space:nowrap; }}
+    .challenge-copy > p {{ max-width:700px; color:var(--muted); font-size:15px; }}
+    .deliverables {{ display:grid; grid-template-columns:repeat(3,1fr); margin-top:22px; border:1px solid var(--line); }} .deliverables div {{ padding:13px; border-right:1px solid var(--line); }} .deliverables div:last-child {{ border-right:0; }} .deliverables span {{ display:block; color:var(--muted); font-size:10px; }} .deliverables strong {{ font-size:12px; }}
+    .runbox {{ position:relative; margin-top:20px; padding:17px 48px 17px 18px; overflow:auto; background:#13252a; color:#dff3f1; }} .runbox code {{ white-space:nowrap; font:13px ui-monospace,SFMono-Regular,Consolas,monospace; }}
+    .copy {{ position:absolute; top:9px; right:9px; width:30px; height:30px; border:1px solid #496068; color:#dff3f1; background:transparent; cursor:pointer; }}
+    .challenge-side dl {{ margin:0; }} .challenge-side div {{ display:grid; grid-template-columns:95px 1fr; gap:14px; padding:10px 0; border-bottom:1px solid var(--line); }} .challenge-side div:last-child {{ border-bottom:0; }} .challenge-side dt {{ color:var(--muted); font-size:11px; }} .challenge-side dd {{ margin:0; font-weight:700; }}
+    .case-workbench {{ display:grid; grid-template-columns:340px minmax(0,1fr); border:1px solid var(--line); background:#fff; }}
+    .case-tabs {{ max-height:480px; overflow:auto; border-right:1px solid var(--line); }}
+    .case-tab {{ display:grid; grid-template-columns:34px 1fr; width:100%; padding:13px 15px; border:0; border-bottom:1px solid var(--line); color:var(--muted); background:#f8f9f8; text-align:left; cursor:pointer; }} .case-tab span {{ color:#9aa4a5; font:700 11px ui-monospace,monospace; }} .case-tab.active {{ color:var(--ink); background:#fff; box-shadow:inset 3px 0 var(--red); font-weight:800; }}
+    .case-detail {{ min-height:480px; padding:34px; }} .case-detail h3 {{ margin:0; font-size:28px; }} .case-brief {{ max-width:720px; margin:14px 0 22px; font-size:17px; font-weight:650; }}
+    .setup-list {{ display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--line); border-left:1px solid var(--line); }} .setup-list span {{ min-height:82px; padding:12px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); color:var(--muted); font-size:12px; }}
+    .case-prompt {{ margin-top:24px; padding:18px; border-left:3px solid var(--red); background:var(--wash); }} .case-prompt span {{ color:var(--red); font-size:10px; font-weight:850; }} .case-prompt p {{ margin:5px 0 0; }}
+    .score-layout {{ display:grid; grid-template-columns:.8fr 1.2fr; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }}
+    .score-summary {{ padding:28px 34px 28px 0; }} .score-grid {{ display:grid; grid-template-columns:1fr 1fr; margin-top:19px; border:1px solid var(--line); }} .score-grid div {{ padding:17px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }} .score-grid div:nth-child(2n) {{ border-right:0; }} .score-grid div:nth-last-child(-n+2) {{ border-bottom:0; }} .score-grid strong {{ display:block; font-size:26px; }} .score-grid span {{ color:var(--muted); font-size:10px; }}
+    .score-summary p {{ color:var(--muted); }} .score-note {{ padding-top:12px; border-top:1px solid var(--line); font-size:11px; }}
+    .score-table {{ min-width:0; max-width:100%; padding:28px 0 28px 34px; border-left:1px solid var(--line); overflow:auto; }}
+    table {{ width:100%; border-collapse:collapse; min-width:610px; }} th,td {{ padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }} th {{ color:var(--muted); font-size:10px; text-transform:uppercase; }} td span {{ display:block; color:var(--muted); font-size:10px; }} tr:last-child td {{ border-bottom:0; }}
+    .miss {{ color:var(--red); }} .pass {{ color:var(--teal); }}
+    .ops {{ display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid rgba(255,255,255,.18); }} .op {{ padding:26px 22px; border-right:1px solid rgba(255,255,255,.18); }} .op:last-child {{ border-right:0; }} .op b {{ color:#ff7667; font:800 12px ui-monospace,monospace; }} .op h3 {{ margin:15px 0 7px; font-size:17px; }} .op p {{ margin:0; color:#a8babc; font-size:12px; }}
+    .dark .section-head > p {{ color:#a8babc; }}
+    .star-contract {{ display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--line); }} .contract {{ padding:25px 25px 25px 0; border-right:1px solid var(--line); }} .contract + .contract {{ padding-left:25px; }} .contract:last-child {{ border-right:0; }} .contract strong {{ display:block; margin-bottom:7px; font-size:16px; }} .contract p {{ margin:0; color:var(--muted); }}
+    .season-table {{ min-width:0; max-width:100%; overflow:auto; }} .season-table td:first-child {{ font-weight:800; }} .season-table .current td {{ background:#f1faf7; }}
+    .join {{ display:grid; grid-template-columns:1fr auto; gap:40px; align-items:center; }} .join p {{ max-width:700px; color:#a8babc; }} .join .actions {{ justify-content:flex-end; }} .join .button {{ border-color:#fff; }} .join .button.secondary {{ color:#fff; background:transparent; }}
+    .foot {{ padding:24px 0 34px; color:var(--muted); }} .foot-line {{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }}
+    @media (max-width:900px) {{ .hero-copy {{ width:72%; }} .section-head {{ grid-template-columns:1fr; gap:13px; }} .challenge-grid,.score-layout {{ grid-template-columns:1fr; }} .challenge-copy,.score-summary {{ padding-right:0; }} .challenge-side,.score-table {{ padding-left:0; border-left:0; border-top:1px solid var(--line); }} .case-workbench {{ grid-template-columns:260px minmax(0,1fr); }} .ops {{ grid-template-columns:1fr 1fr; }} .op:nth-child(2) {{ border-right:0; }} .op:nth-child(-n+2) {{ border-bottom:1px solid rgba(255,255,255,.18); }} }}
+    @media (max-width:680px) {{ .shell {{ width:min(100% - 24px,1180px); }} .nav-links a:not(.repo) {{ display:none; }} .brand small {{ display:none; }} .hero {{ min-height:535px; align-items:start; background-position:58% center; }} .hero-copy {{ width:100%; padding:35px 0; }} h1 {{ max-width:330px; font-size:38px; }} .hero-lead {{ max-width:345px; font-size:16px; }} .hero-copy .actions {{ width:220px; flex-direction:column; }} .stats-grid {{ grid-template-columns:1fr 1fr; }} .stat:nth-child(2) {{ border-right:0; }} .stat:nth-child(-n+2) {{ border-bottom:1px solid rgba(255,255,255,.15); }} .band-inner {{ padding:40px 0; }} h2 {{ font-size:27px; }} .challenge-copy {{ padding-top:22px; }} .challenge-side {{ padding-top:22px; }} .deliverables {{ grid-template-columns:1fr; }} .deliverables div {{ border-right:0; border-bottom:1px solid var(--line); }} .deliverables div:last-child {{ border-bottom:0; }} .case-workbench {{ grid-template-columns:1fr; }} .case-tabs {{ display:flex; max-height:none; overflow:auto; border-right:0; border-bottom:1px solid var(--line); }} .case-tab {{ min-width:170px; }} .case-detail {{ min-height:430px; padding:24px 18px; }} .setup-list {{ grid-template-columns:1fr; }} .setup-list span {{ min-height:0; }} .score-grid {{ grid-template-columns:1fr 1fr; }} .ops,.star-contract {{ grid-template-columns:1fr; }} .op,.op:nth-child(2),.contract,.contract + .contract {{ padding:21px 0; border-right:0; border-bottom:1px solid rgba(255,255,255,.18); }} .star-contract .contract {{ border-bottom-color:var(--line); }} .join {{ grid-template-columns:1fr; }} .join .actions {{ justify-content:flex-start; flex-direction:column; }} .join .button {{ width:100%; }} }}
+    @media (prefers-reduced-motion:reduce) {{ html {{ scroll-behavior:auto; }} }}
   </style>
 </head>
 <body>
-  <header><nav class="shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>OpenMarketEval <span class="brand-sub">A股研究 Agent 实验场</span></a><div class="nav-links"><a href="#tracks">实验任务</a><a href="#audit">防泄漏自检</a><a href="#sources">数据源</a><a href="#join">参与</a><a class="github" href="https://github.com/Alfonsobang/open-market-eval">GitHub ↗</a></div></nav></header>
-  <div class="shell workspace" id="top">
-    <aside><p class="side-title">实验导航</p><nav class="side-nav"><a href="#tracks">01 · 五类任务</a><a href="#workbench">02 · 任务工作台</a><a href="#audit">03 · 回测防泄漏</a><a href="#sources">04 · 来源注册表</a><a href="#methods">05 · 技术路线</a><a href="#join">06 · 加入试验</a></nav><div class="side-status"><strong>当前阶段：v0.3 规格期</strong><p>A股任务目录已发布。首个公开数据包和 Agent 对比尚未发布，不展示虚构成绩。</p></div></aside>
-    <main>
-      <div class="intro"><div class="intro-copy"><p class="kicker">Public A-share agent experiment</p><h1>A股研究 Agent 公共实验场</h1><p>不提供荐股。我们把公告搜索、财务查数、事件预测、回测审计和研究写作拆成可复现、可评分、可复盘的公开任务。</p><div class="actions"><a class="button" href="#workbench">打开任务工作台</a><a class="button secondary" href="https://github.com/Alfonsobang/open-market-eval/tree/main/benchmarks/a-share-lab">查看机器可读规格 ↗</a></div></div><div class="intro-visual" role="img" aria-label="A股研究 Agent 的五轨实验流程示意图"></div></div>
-      <div class="audience"><div class="persona"><span class="persona-no">01</span><div><strong>研究基础不完整的 A 股研究者</strong><p>需要一套不会把搜索摘要、错误口径和漂亮回测当成事实的工作规范。</p></div></div><div class="persona"><span class="persona-no">02</span><div><strong>对 AI 投资有兴趣的实践者</strong><p>需要知道 Agent 到底会查、会算、会预测，还是只会生成听起来合理的答案。</p></div></div></div>
-      <div class="summary"><div class="summary-item"><span>研究任务轨道</span><strong>{len(tracks)}</strong></div><div class="summary-item"><span>已注册公共来源</span><strong>{len(sources)}</strong></div><div class="summary-item"><span>一手官方来源</span><strong>{primary_count}</strong></div><div class="summary-item"><span>A股公开成绩</span><strong>0</strong><span>等待首批真实试验</span></div></div>
+  <header><nav class="shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>OpenMarketEval <small>A-SHARE AGENT ARENA</small></a><div class="nav-links"><a href="#challenge">本期挑战</a><a href="#scoring">评分</a><a href="#season">赛季</a><a href="#operations">运营机制</a><a class="repo" href="https://github.com/Alfonsobang/open-market-eval">GitHub ↗</a></div></nav></header>
 
-      <section id="tracks"><div class="section-head"><div><p class="kicker">Experiment catalog</p><h2>五类真正可验证的研究任务</h2></div><p>先验证 Agent 完成研究工作的能力，再讨论它能否形成投资判断。每条轨道都有标准输入、交付物、评分指标和失败模式。</p></div><div class="table-wrap"><table><thead><tr><th>#</th><th>任务</th><th>状态</th><th>核心指标</th><th>交付物</th></tr></thead><tbody>{_track_rows(tracks)}</tbody></table></div></section>
+  <main id="top">
+    <section class="hero"><div class="shell"><div class="hero-copy"><p class="eyebrow">A-SHARE AGENT ARENA · PRESEASON</p><h1>A 股研究 Agent 联赛</h1><p class="hero-lead"><strong>首关：抓出回测里偷看的未来。</strong><br>把任意 Agent 放进同一组 A 股研究陷阱，比较它能否识别未来函数、幸存者偏差和不可能成交。</p><div class="actions"><a class="button" href="#challenge">运行首关</a><a class="button secondary" href="https://github.com/Alfonsobang/open-market-eval/tree/main/benchmarks/a-share-backtest-forensics">查看 10 个案例 ↗</a></div><p class="hero-note">公开开发集 · 无需 API Key · 不含荐股 · 不声称投资收益</p></div></div></section>
+    <div class="stats"><div class="shell stats-grid"><div class="stat"><strong>{len(cases)}</strong><span>可运行回测取证案例</span></div><div class="stat"><strong>{issue_count}</strong><span>A 股特有缺陷类别</span></div><div class="stat"><strong>1</strong><span>Harbor 风格确定性任务</span></div><div class="stat"><strong>{public_agent_count}</strong><span>公开参赛 Agent，等待首份外部成绩</span></div></div></div>
 
-      <section id="workbench"><div class="section-head"><div><p class="kicker">Interactive specification</p><h2>任务工作台</h2></div><p>选择一条轨道，直接查看它解决什么问题、需要什么输入、如何评分以及最容易出现什么错误。</p></div><div class="track-tabs">{''.join(f'<button class="track-tab{" active" if index == 0 else ""}" data-track="{html.escape(track["id"])}">{html.escape(track["name_zh"])}</button>' for index, track in enumerate(tracks))}</div><div class="track-detail">{_initial_track(tracks[0])}</div></section>
+    <section class="band" id="challenge"><div class="shell band-inner"><div class="section-head"><div><p class="eyebrow">CURRENT CHALLENGE</p><h2>Backtest Forensics<br>回测取证开发集</h2></div><p>它不是又一个收益预测 Demo。用户交付的是缺陷证据，评分器同时惩罚漏检和误报；两个干净控制组专门测试 Agent 会不会为了显得专业而乱报问题。</p></div><div class="challenge-grid"><div class="challenge-copy"><div class="challenge-title"><h3>Preseason · 10-case public dev pack</h3><span class="live-badge">SCORER LIVE</span></div><p>覆盖同收盘价成交、当前股票池回放、复权价成交、T+1、停牌与涨跌停、交易成本、财务修订穿越和退市幸存者偏差。</p><div class="deliverables"><div><span>INPUT</span><strong>cases.jsonl</strong></div><div><span>AGENT OUTPUT</span><strong>audit_report.jsonl</strong></div><div><span>VERDICT</span><strong>scorecard.json + .md</strong></div></div><div class="runbox"><code id="run-command">python -m open_market_eval audit-demo</code><button class="copy" id="copy-command" title="复制命令" aria-label="复制运行命令">⧉</button></div></div><div class="challenge-side"><dl><div><dt>安装</dt><dd>零第三方依赖</dd></div><div><dt>评分</dt><dd>Precision / Recall / F1 / Exact</dd></div><div><dt>数据</dt><dd>合成场景，不重分发市场数据</dd></div><div><dt>完整性</dt><dd>公开开发集，不用于隐藏榜排名</dd></div><div><dt>接入</dt><dd>JSONL + Harbor 风格任务</dd></div></dl></div></div></div></section>
 
-      <section id="audit"><div class="section-head"><div><p class="kicker">Self-check</p><h2>你的 A 股回测经得起审计吗？</h2></div><p>逐项确认。这个自检不证明策略有效，但任何未通过项都足以让高收益曲线失去可信度。</p></div><div class="audit-layout"><div class="checklist">
-        <label class="check-row"><input type="checkbox"><span><strong>声明统一的信息截止时间</strong><span>行情、公告、财务字段和股票池都不能晚于信号时点。</span></span></label>
-        <label class="check-row"><input type="checkbox"><span><strong>使用历史时点股票池</strong><span>新上市、退市、ST 和指数调样不能用今天的名单向过去投射。</span></span></label>
-        <label class="check-row"><input type="checkbox"><span><strong>信号与成交价格严格分离</strong><span>收盘后生成的信号不能在同一收盘价成交。</span></span></label>
-        <label class="check-row"><input type="checkbox"><span><strong>成交使用可交易原始价格</strong><span>前复权序列适合计算收益，不应直接充当跨除权日成交价格。</span></span></label>
-        <label class="check-row"><input type="checkbox"><span><strong>建模 T+1、停牌和涨跌停</strong><span>无法买入或卖出的订单不能假设成交。</span></span></label>
-        <label class="check-row"><input type="checkbox"><span><strong>计入双边成本与滑点压力</strong><span>至少报告多档成本下结果，而不是只展示零成本曲线。</span></span></label>
-        <label class="check-row"><input type="checkbox"><span><strong>财务数据按首次可见版本对齐</strong><span>更正公告和供应商更新不能提前进入历史样本。</span></span></label>
-        <label class="check-row"><input type="checkbox"><span><strong>保留全部实验与失败结果</strong><span>调参、失败窗口和不利市场阶段都进入实验账本。</span></span></label>
-      </div><div class="audit-score"><span class="field-label">基础可信度检查</span><div class="score-value" id="audit-value">0 <span>/ 8</span></div><div class="progress"><span id="audit-progress"></span></div><p class="score-message" id="audit-message">先完成时点、股票池和成交约束，再看收益率。</p><p class="score-label">该工具只检查研究设计，不评价任何策略或证券。</p></div></div></section>
+    <section class="band alt" id="cases"><div class="shell band-inner"><div class="section-head"><div><p class="eyebrow">CASE EXPLORER</p><h2>先看一关，再决定你的 Agent 会不会审。</h2></div><p>点击任意案例查看研究设置。正式提交必须给出标准缺陷代码与可定位的证据句，不能只输出“可能存在未来函数”。</p></div><div class="case-workbench"><div class="case-tabs">{_case_buttons(cases)}</div><div class="case-detail">{_initial_case(cases[0])}</div></div></div></section>
 
-      <section id="sources"><div class="section-head"><div><p class="kicker">Source registry</p><h2>先找原始来源，再调用便利接口</h2></div><p>来源层级是评测的一部分。官方披露用于事实和结算；开源接口用于接入与交叉验证，不能自动升级为一手证据。</p></div><div class="table-wrap"><table><thead><tr><th>来源</th><th>层级</th><th>适用任务</th><th>使用警告</th></tr></thead><tbody>{_source_rows(sources)}</tbody></table></div></section>
+    <section class="band" id="scoring"><div class="shell band-inner"><div class="section-head"><div><p class="eyebrow">REAL SCORECARD</p><h2>成绩不是“看起来挺专业”。</h2></div><p>下方来自仓库内手工编写的格式示例，用来证明评分闭环。它故意漏掉两项，因此召回率和逐案命中不会满分；这不是任何模型成绩。</p></div><div class="score-layout"><div class="score-summary"><p class="eyebrow">FORMAT FIXTURE · NOT A MODEL</p><h3>示例评分输出</h3><div class="score-grid"><div><strong>{audit_score['precision']:.1%}</strong><span>PRECISION</span></div><div><strong>{audit_score['recall']:.1%}</strong><span>RECALL</span></div><div><strong>{audit_score['f1']:.1%}</strong><span>F1</span></div><div><strong>{audit_score['exact_case_accuracy']:.1%}</strong><span>EXACT CASE</span></div></div><p class="score-note">公开 Agent 榜目前为空。第一个外部可复现提交会获得首位记录，但必须公开模型、Agent、运行参数和原始输出。</p></div><div class="score-table"><table><thead><tr><th>案例</th><th>判定</th><th>检出</th><th>漏检</th></tr></thead><tbody>{''.join(f'<tr><td>{html.escape(case["case_id"])}</td><td class="{"pass" if case["exact_match"] else "miss"}">{"完全命中" if case["exact_match"] else "有漏检"}</td><td>{len(case["correct"])}</td><td>{html.escape(", ".join(ISSUE_NAMES.get(code, code) for code in case["missed"]) or "—")}</td></tr>' for case in audit_score['cases'])}</tbody></table></div></div></div></section>
 
-      <section id="methods"><div class="section-head"><div><p class="kicker">Method stack</p><h2>技术路线与建设状态</h2></div><p>借鉴前沿工作，但不把引用当背书。2026 年预印本只代表值得验证的方向，不代表已经形成行业共识。</p></div><div class="method-grid"><div><h3>方法与开源基础</h3><table><tbody>{_method_rows()}</tbody></table></div><div><h3>当前诚实状态</h3><div class="build-status"><div class="build-item"><strong>已完成</strong><span>五轨规格、来源注册表、封存与评分核心</span></div><div class="build-item"><strong>运行中</strong><span>{len(questions)} 个宏观 L2 问题验证基础设施</span></div><div class="build-item"><strong>下一交付</strong><span>10 个公告搜索与时点查数公开任务</span></div><div class="build-item"><strong>尚未声称</strong><span>A股模型排名、超额收益或真实投资能力</span></div></div></div></div><div class="disclaimer">OpenMarketEval 不包含私有公司数据、真实用户数据或专有工作流。所有任务仅用于研究与评测，不构成投资建议。</div></section>
+    <section class="band dark" id="operations"><div class="shell band-inner"><div class="section-head"><div><p class="eyebrow">OPERATING SYSTEM</p><h2>不是发几篇文章，是每月完成一个公开赛季。</h2></div><p>运营内容全部由真实实验自动产生：新任务、参赛轨迹、失败案例和榜单更新。没有新实验，就不制造空洞热点。</p></div><div class="ops"><div class="op"><b>WEEK 01</b><h3>发布挑战</h3><p>释出任务合同、输入包、评分维度和一条可运行命令。</p></div><div class="op"><b>WEEK 02</b><h3>Agent 公开跑</h3><p>征集不同模型与框架，封存配置、成本和完整原始输出。</p></div><div class="op"><b>WEEK 03</b><h3>失败取证</h3><p>拆解最有教育价值的漏检与误报，形成可传播研究笔记。</p></div><div class="op"><b>WEEK 04</b><h3>发布榜单</h3><p>更新可复现成绩、变更日志和下期挑战，不隐藏失败。</p></div></div></div></section>
 
-      <section id="join" class="participate"><div class="participate-copy"><p class="kicker">Build in public</p><h2>首批试验需要真实问题，不需要漂亮口号。</h2><p>最有价值的贡献是：一个能明确结算的 A 股研究任务、一个会暴露常见错误的 verifier，或一个可复现的 Agent adapter。</p></div><div class="participate-actions"><a class="button" href="https://github.com/Alfonsobang/open-market-eval/issues">认领首批任务 ↗</a><a class="button secondary" href="https://github.com/Alfonsobang/open-market-eval/blob/main/CONTRIBUTING.md">贡献规范 ↗</a></div></section>
-    </main>
-  </div>
-  <footer><div class="shell footer-line"><span>OpenMarketEval · A股研究 Agent 公共实验场</span><span>公开数据 · 时点安全 · 可复现 · 不构成投资建议</span></div></footer>
+    <section class="band" id="season"><div class="shell band-inner"><div class="section-head"><div><p class="eyebrow">SEASON MAP</p><h2>一个旗舰联赛，五条研究能力轨道。</h2></div><p>回测取证负责打开知名度，公告搜索与时点查数负责建立 A 股数据工程深度，事件预测和研究备忘录负责形成长期评测体系。</p></div><div class="season-table"><table><thead><tr><th>阶段</th><th>挑战</th><th>状态</th><th>公开交付物</th><th>主要指标</th></tr></thead><tbody><tr class="current"><td>Preseason</td><td>Backtest Forensics</td><td class="pass">评分器已上线</td><td>10-case dev pack</td><td>Precision / Recall / F1</td></tr>{_track_rows(tracks)}</tbody></table></div></div></section>
+
+    <section class="band alt" id="star"><div class="shell band-inner"><div class="section-head"><div><p class="eyebrow">WHY FOLLOW</p><h2>关注这个仓库，你会持续得到什么？</h2></div><p>不是每日行情观点，而是一套越来越难、越来越接近真实投研工作的公共 Agent 压力测试。</p></div><div class="star-contract"><div class="contract"><strong>每月一个可运行挑战</strong><p>任务、输入合同、评分器和失败样例一起发布，不只给结论。</p></div><div class="contract"><strong>所有失误进入公开档案</strong><p>榜单之外保留漏检、误报、时间穿越和不可成交假设。</p></div><div class="contract"><strong>连接 Harbor 与量化生态</strong><p>持续输出 Harbor 任务、Qlib 数据边界和通用 Agent adapter。</p></div></div><div class="section-head" style="margin-top:48px"><div><p class="eyebrow">TECHNICAL LINEAGE</p><h2>站在可验证工具之上。</h2></div><p>引用只用于说明方法来源，不代表项目背书或官方合作。</p></div><div class="season-table"><table><tbody>{_reference_rows()}</tbody></table></div></div></section>
+
+    <section class="band dark"><div class="shell band-inner join"><div><p class="eyebrow">ENTER THE ARENA</p><h2>提交第一份外部 Agent 成绩。</h2><p>运行开发集，保留完整输出与参数，然后提交成绩 issue。我们优先接受可复现失败，不接受收益宣传、荐股和无法核验的截图。</p></div><div class="actions"><a class="button" href="https://github.com/Alfonsobang/open-market-eval/issues/new">提交 Agent 成绩 ↗</a><a class="button secondary" href="https://github.com/Alfonsobang/open-market-eval/tree/main/integrations/harbor/a-share-backtest-audit">运行 Harbor 任务 ↗</a></div></div></section>
+  </main>
+
+  <footer class="foot"><div class="shell foot-line"><span>OpenMarketEval · A-Share Agent Arena</span><span>{len(sources)} 个来源已注册 · {len(questions)} 个封存事件问题 · 不构成投资建议</span></div></footer>
   <script>
-    const tracks = {tracks_json};
-    const statusLabels = {status_json};
-    const byId = Object.fromEntries(tracks.map(track => [track.id, track]));
+    const cases = {cases_json};
+    const byId = Object.fromEntries(cases.map(item => [item.id, item]));
     const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[char]));
-    function selectTrack(id) {{
-      const track = byId[id];
-      if (!track) return;
-      document.querySelectorAll('.track-tab').forEach(button => button.classList.toggle('active', button.dataset.track === id));
-      document.querySelector('#detail-en').textContent = track.name_en;
-      document.querySelector('#detail-name').textContent = track.name_zh;
-      const [label, color] = statusLabels[track.status] || [track.status, 'gray'];
-      document.querySelector('#detail-status').innerHTML = `<span class="badge badge-${{color}}">${{escapeHtml(label)}}</span>`;
-      for (const [field, value] of Object.entries({{question:track.question, value:track.user_value, input:track.input, deliverable:track.deliverable, sample:track.sample_task}})) document.querySelector(`#detail-${{field}}`).textContent = value;
-      document.querySelector('#detail-metrics').innerHTML = track.metrics.map(item => `<span>${{escapeHtml(item)}}</span>`).join('');
-      document.querySelector('#detail-failures').innerHTML = track.failure_modes.map(item => `<li>${{escapeHtml(item)}}</li>`).join('');
-      document.querySelector('#detail-command').textContent = `python -m open_market_eval show-track --track ${{track.id}}`;
+    function showCase(id) {{
+      const item = byId[id]; if (!item) return;
+      document.querySelectorAll('[data-case]').forEach(button => button.classList.toggle('active', button.dataset.case === id));
+      document.querySelector('#case-id').textContent = `${{item.id}} · PRACTICE CASE`;
+      document.querySelector('#case-title').textContent = item.title;
+      document.querySelector('#case-brief').textContent = item.brief;
+      document.querySelector('#case-setup').innerHTML = item.research_setup.map(value => `<span>${{escapeHtml(value)}}</span>`).join('');
+      document.querySelector('#case-prompt').textContent = item.prompt;
     }}
-    document.querySelectorAll('[data-track]').forEach(button => button.addEventListener('click', () => selectTrack(button.dataset.track)));
-    document.querySelectorAll('[data-select-track]').forEach(button => button.addEventListener('click', () => {{ selectTrack(button.dataset.selectTrack); document.querySelector('#workbench').scrollIntoView(); }}));
-    const checks = [...document.querySelectorAll('.check-row input')];
-    function updateAudit() {{
-      const count = checks.filter(input => input.checked).length;
-      document.querySelector('#audit-value').innerHTML = `${{count}} <span>/ 8</span>`;
-      const progress = document.querySelector('#audit-progress');
-      progress.style.width = `${{count / 8 * 100}}%`;
-      progress.style.background = count === 8 ? 'var(--green)' : count >= 5 ? 'var(--amber)' : 'var(--red)';
-      document.querySelector('#audit-message').textContent = count === 8 ? '基础约束已覆盖，下一步检查数据质量和样本外稳定性。' : count >= 5 ? '仍有关键缺口，暂时不要解释收益曲线。' : '先完成时点、股票池和成交约束，再看收益率。';
-    }}
-    checks.forEach(input => input.addEventListener('change', updateAudit));
+    document.querySelectorAll('[data-case]').forEach(button => button.addEventListener('click', () => showCase(button.dataset.case)));
+    document.querySelector('#copy-command').addEventListener('click', async () => {{
+      await navigator.clipboard.writeText(document.querySelector('#run-command').textContent);
+      const button = document.querySelector('#copy-command'); button.textContent = '✓'; setTimeout(() => button.textContent = '⧉', 1200);
+    }});
   </script>
 </body>
 </html>
@@ -279,10 +215,11 @@ def render_dashboard(
 
 
 def build_site(
-    score: dict[str, Any],
+    audit_score: dict[str, Any],
     questions: list[dict[str, Any]],
     tracks: list[dict[str, Any]],
     sources: list[dict[str, Any]],
+    cases: list[dict[str, Any]],
     output: str | Path,
     image_path: str | Path,
 ) -> None:
@@ -292,11 +229,12 @@ def build_site(
     assets.mkdir(parents=True, exist_ok=True)
     data.mkdir(parents=True, exist_ok=True)
     (destination / "index.html").write_text(
-        render_dashboard(score, questions, tracks, sources), encoding="utf-8"
+        render_dashboard(audit_score, questions, tracks, sources, cases), encoding="utf-8"
     )
-    shutil.copyfile(image_path, assets / "a-share-agent-lab.png")
+    shutil.copyfile(image_path, assets / "a-share-arena-forensics.png")
     for name, value in (
-        ("smoke-scorecard.json", score),
+        ("audit-dev-scorecard.json", audit_score),
+        ("a-share-backtest-cases.json", cases),
         ("a-share-tracks.json", tracks),
         ("source-registry.json", sources),
         ("method-references.json", METHOD_REFERENCES),

@@ -1,0 +1,57 @@
+name: Submit an Agent result
+description: Publish a reproducible A-Share Agent Arena development-pack result.
+title: "[Agent result]: "
+labels: ["arena-result"]
+body:
+  - type: input
+    id: agent
+    attributes:
+      label: Agent and version
+      placeholder: Agent framework, commit or release
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model and provider
+      placeholder: Exact model identifier and date where relevant
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Reproduction command
+      description: Include setup and the exact command used to produce audit_report.jsonl.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Public artifacts
+      description: Link the raw submission, JSON scorecard, Markdown scorecard, configuration, and logs.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Runtime environment
+      placeholder: OS, Python version, hardware, and container if used
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Failure notes
+      description: Which misses or false positives were most informative?
+  - type: checkboxes
+    id: integrity
+    attributes:
+      label: Integrity checks
+      options:
+        - label: I disclose that this is a public development-pack result, not a hidden-test ranking.
+          required: true
+        - label: I include complete raw outputs and have not removed failed cases.
+          required: true
+        - label: This submission contains no investment recommendation or performance claim.
+          required: true

@@ -1,0 +1,54 @@
+name: Propose an Arena challenge
+description: Propose one reproducible A-share research-agent challenge.
+title: "[Arena challenge]: "
+labels: ["arena-challenge"]
+body:
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options:
+        - Backtest forensics
+        - Filing search
+        - Point-in-time fact QA
+        - Event forecasting
+        - Evidence-linked research memo
+    validations:
+      required: true
+  - type: textarea
+    id: user_problem
+    attributes:
+      label: User problem
+      description: What real research mistake or bottleneck does this challenge expose?
+    validations:
+      required: true
+  - type: textarea
+    id: task_contract
+    attributes:
+      label: Task contract
+      description: Define input, expected artifact, information cutoff, and allowed tools.
+    validations:
+      required: true
+  - type: textarea
+    id: verifier
+    attributes:
+      label: Verifier
+      description: Explain deterministic checks, reviewer rules, and false-positive penalties.
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Public sources and rights
+      description: Link primary sources and explain whether fixtures can be redistributed.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checks
+      options:
+        - label: The challenge uses no private company data, real user data, or proprietary workflow.
+          required: true
+        - label: The challenge is not a stock recommendation, target price, or return claim.
+          required: true

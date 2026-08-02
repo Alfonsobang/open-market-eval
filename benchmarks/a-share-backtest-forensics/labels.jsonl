@@ -1,0 +1,10 @@
+{"case_id":"bt-001","issue_codes":["same_close_execution","current_universe_projection"],"rationales":{"same_close_execution":"15:05 生成的信号不能按已经形成的 15:00 收盘价成交。","current_universe_projection":"当前仍上市名单会删除历史退市证券并引入幸存者偏差。"}}
+{"case_id":"bt-002","issue_codes":["adjusted_price_execution","transaction_costs_omitted"],"rationales":{"adjusted_price_execution":"前复权序列不是历史时点真实可成交价格。","transaction_costs_omitted":"高换手周度全调仓不能假设零佣金、印花税和滑点。"}}
+{"case_id":"bt-003","issue_codes":["tradability_constraints_ignored","t_plus_one_violation"],"rationales":{"tradability_constraints_ignored":"涨停状态下不能假设目标买单无限量成交。","t_plus_one_violation":"A 股现货新买仓位不能在同一交易日卖出。"}}
+{"case_id":"bt-004","issue_codes":["revision_leakage"],"rationales":{"revision_leakage":"更正后的数值只能从更正信息可见时开始进入研究。"}}
+{"case_id":"bt-005","issue_codes":["delisting_survivorship"],"rationales":{"delisting_survivorship":"删除已退市证券会只保留幸存样本并遗漏退市损失。"}}
+{"case_id":"bt-006","issue_codes":[],"rationales":{}}
+{"case_id":"bt-007","issue_codes":["tradability_constraints_ignored"],"rationales":{"tradability_constraints_ignored":"停牌证券没有可执行的 VWAP，订单应延迟或失败。"}}
+{"case_id":"bt-008","issue_codes":["transaction_costs_omitted"],"rationales":{"transaction_costs_omitted":"分钟级高换手结果对佣金、印花税、滑点和冲击成本高度敏感。"}}
+{"case_id":"bt-009","issue_codes":["current_universe_projection","revision_leakage"],"rationales":{"current_universe_projection":"当前指数成分不能替代 2018 年以来逐期成分。","revision_leakage":"最新修订值被提前写入历史因子。"}}
+{"case_id":"bt-010","issue_codes":[],"rationales":{}}

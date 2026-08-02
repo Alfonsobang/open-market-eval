@@ -1,0 +1,15 @@
+{
+  "case_id": "bt-003",
+  "findings": [
+    {
+      "code": "tradability_constraints_ignored",
+      "severity": "critical",
+      "evidence": "The simulator assumes an entire buy order can fill while the security is limit-up."
+    },
+    {
+      "code": "t_plus_one_violation",
+      "severity": "critical",
+      "evidence": "The simulator sells an A-share cash-equity position on the same day it was purchased."
+    }
+  ]
+}
