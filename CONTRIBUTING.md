@@ -1,10 +1,24 @@
 # Contributing
 
-OpenMarketEval welcomes small, auditable contributions that improve market-event forecasting research.
+OpenMarketEval welcomes small, auditable contributions that improve A-share research-agent evaluation and market-event forecasting.
+
+## Propose an A-share task
+
+Use the [A-share task proposal](https://github.com/Alfonsobang/open-market-eval/issues/new?template=a-share-task.yml) for filing search, point-in-time QA, event forecasting, backtest audit, or research-memo tasks. A useful proposal includes:
+
+1. A concrete research question that has one inspectable deliverable.
+2. An exact information cutoff, including timezone.
+3. Public primary sources that were available before that cutoff.
+4. Expected fields or artifacts, plus a deterministic or reviewer-auditable verifier.
+5. Known failure modes such as revised filings, unit mistakes, look-ahead leakage, survivorship bias, or unsupported claims.
+
+Do not submit stock tips, target prices, unverifiable screenshots, scraped datasets without clear rights, or tasks whose answer depends on private terminals. The first task pack should remain runnable by an independent researcher using public information.
 
 ## Good first contributions
 
 - Add a question with unambiguous resolution criteria and public sources.
+- Turn one A-share workflow in [`benchmarks/a-share-lab/tracks.json`](benchmarks/a-share-lab/tracks.json) into a minimal public fixture.
+- Add an official disclosure source or document a point-in-time data caveat in [`sources.json`](benchmarks/a-share-lab/sources.json).
 - Add an agent adapter that emits the forecast schema.
 - Add a proper scoring rule, calibration diagnostic, or temporal-integrity test.
 - Add a Harbor-compatible task without network or private-data dependencies.
@@ -26,6 +40,7 @@ Run before opening a pull request:
 ```bash
 python -m unittest discover -s tests -v
 python -m open_market_eval demo --output runs/demo
+python -m open_market_eval list-tracks
 ```
 
 For a benchmark or scoring change, explain what failure mode it catches and provide a minimal fixture. Maintainers may decline large generated dumps, promotional content, unverifiable forecasts, or datasets with unclear rights.

@@ -5,15 +5,32 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
 
-**Can an AI assign 70% before a market-moving event, prove what it knew at the time, and remain calibrated after 100 calls?**
+**Can an AI research China A-shares from public filings, retrieve the right point-in-time facts, survive a leakage audit, and make forecasts that remain calibrated?**
 
-OpenMarketEval is an open evaluation harness for **stock-market and major-event forecasting agents**. It turns forecasts into timestamped, evidence-grounded artifacts, seals them before outcomes are known, then resolves and scores every hit and miss.
+OpenMarketEval is building a public **A-Share Agent Lab** for five real research workflows: filing search, point-in-time fact QA, event forecasting, backtest audit, and evidence-linked research memos.
 
-Use it to run any model or research agent through a one-file protocol, submit forecasts by pull request, and compare calibration after official results arrive.
+It is for developing A-share researchers who need a disciplined process and AI-investing practitioners who want to test agents without mistaking fluent prose or a single backtest for evidence.
 
-[Live dashboard](https://alfonsobang.github.io/open-market-eval/) | [Open forecast round](live/rounds/2026-08/README.md) | [中文文档](README.zh-CN.md) | [Protocol](docs/protocol.md) | [Roadmap](docs/roadmap.md)
+[A-Share Lab](https://alfonsobang.github.io/open-market-eval/) | [Track specifications](benchmarks/a-share-lab/README.md) | [中文文档](README.zh-CN.md) | [Open forecast round](live/rounds/2026-08/README.md) | [Roadmap](docs/roadmap.md)
 
-![OpenMarketEval lifecycle](docs/assets/open-market-eval-social-preview.png)
+![A-Share Agent Lab workflow](docs/assets/a-share-agent-lab.png)
+
+## A-Share Agent Lab
+
+| Track | What it tests | Primary output |
+| --- | --- | --- |
+| Filing search | Direct, pre-cutoff evidence from official disclosures | `evidence_bundle.json` |
+| Point-in-time fact QA | Value, period, unit, entity scope, and report version | `fact_answer.json` |
+| Event forecasting | Sealed probabilities before objective outcomes | `forecasts.jsonl` + `seal.json` |
+| Backtest audit | Look-ahead, survivorship, execution, universe, and cost errors | `audit_report.json` |
+| Research memo | Claims linked to evidence, counterevidence, unknowns, and falsifiers | `memo.md` + `claim_graph.json` |
+
+```bash
+python -m open_market_eval list-tracks
+python -m open_market_eval show-track --track backtest-audit
+```
+
+The five-track catalog and public source registry are machine-readable in [`benchmarks/a-share-lab`](benchmarks/a-share-lab/). The specification is public; no A-share model ranking or investment performance is claimed yet.
 
 ## One-minute demo
 

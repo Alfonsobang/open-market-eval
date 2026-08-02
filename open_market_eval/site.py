@@ -7,353 +7,271 @@ from pathlib import Path
 from typing import Any
 
 
-RESEARCH_REFERENCES = [
+METHOD_REFERENCES = [
     {
         "name": "ForecastBench",
-        "meta": "Karger, Bastani, Tetlock et al. · 2024",
         "url": "https://arxiv.org/abs/2409.19839",
-        "theme": "Live time-gating",
-        "note": "Future-only questions and a continuously refreshed benchmark reduce temporal leakage.",
-    },
-    {
-        "name": "Approaching Human-Level Forecasting",
-        "meta": "Halawi, Zhang, Yueh-Han, Steinhardt · 2024",
-        "url": "https://arxiv.org/abs/2402.18563",
-        "theme": "Retrieval + aggregation",
-        "note": "Search, evidence retrieval, probabilistic reasoning, and forecast aggregation form an end-to-end agent loop.",
+        "use": "未来问题、动态题库与时间泄漏控制",
     },
     {
         "name": "Pitfalls in Evaluating LM Forecasters",
-        "meta": "Paleka, Goel, Geiping, Tramèr · 2025",
         "url": "https://arxiv.org/abs/2506.00723",
-        "theme": "Leakage controls",
-        "note": "Temporal leakage and weak real-world extrapolation can invalidate otherwise impressive results.",
+        "use": "识别时间泄漏和不可外推的评测结论",
     },
     {
-        "name": "Consistency Checks for LM Forecasters",
-        "meta": "Paleka, Sudhir, Tramèr et al. · ICLR 2025",
-        "url": "https://arxiv.org/abs/2412.18544",
-        "theme": "Arbitrage consistency",
-        "note": "Logically related questions can expose incoherent probabilities before outcomes resolve.",
-    },
-    {
-        "name": "ForecastBench-Sim",
-        "meta": "Lee, Merrill, Karger · 2026 preprint",
-        "url": "https://arxiv.org/abs/2606.18686",
-        "theme": "Simulated worlds",
-        "note": "Controlled rollouts make rare events, interventions, and immediate resolution testable at scale.",
-    },
-    {
-        "name": "FinBench",
-        "meta": "Ghosh, Devarakonda · 2026 preprint",
+        "name": "FinBench (2026 preprint)",
         "url": "https://arxiv.org/abs/2607.16229",
-        "theme": "Financial calibration",
-        "note": "Strict time gates, Brier scores, and prediction intervals target the confidence-competence gap.",
+        "use": "金融预测的时间门控、校准和区间评分",
     },
     {
         "name": "Harbor",
-        "meta": "harbor-framework · active open source",
         "url": "https://github.com/harbor-framework/harbor",
-        "theme": "Executable verifiers",
-        "note": "Containerized tasks, programmatic verification, repeated trials, and trajectory artifacts support agent evaluation.",
+        "use": "容器化任务、Agent 轨迹和程序化 verifier",
     },
     {
-        "name": "Inspect AI",
-        "meta": "UK AI Security Institute · open source",
-        "url": "https://www.aisi.gov.uk/blog/open-sourcing-our-testing-framework-inspect",
-        "theme": "Tool traces + sandboxing",
-        "note": "Composable datasets, agents, tools, scorers, and sandboxed execution make tool-using evaluations inspectable.",
+        "name": "Microsoft Qlib",
+        "url": "https://github.com/microsoft/qlib",
+        "use": "AI 量化研究的数据、模型与工作流基础设施",
+    },
+    {
+        "name": "AKShare",
+        "url": "https://github.com/akfamily/akshare",
+        "use": "公开财经数据接入和原型交叉验证",
     },
 ]
 
 
-def _metric(label: str, value: str, note: str, accent: str = "cyan") -> str:
-    return (
-        f'<article class="metric accent-{accent}">'
-        f'<p class="metric-label">{html.escape(label)}</p>'
-        f'<p class="metric-value">{html.escape(value)}</p>'
-        f'<p class="metric-note">{html.escape(note)}</p>'
-        "</article>"
-    )
+STATUS_LABELS = {
+    "live": ("运行中", "green"),
+    "pilot": ("首批试验", "cyan"),
+    "spec": ("规格已发布", "amber"),
+    "planned": ("规划中", "gray"),
+}
 
 
-def _source_agency(question: dict[str, Any]) -> str:
-    tags = set(question.get("tags", []))
-    for tag, agency in (("bls", "BLS"), ("bea", "BEA"), ("ecb", "ECB"), ("federal-reserve", "Federal Reserve")):
-        if tag in tags:
-            return agency
-    return "Official source"
+def _status_badge(status: str) -> str:
+    label, color = STATUS_LABELS.get(status, (status, "gray"))
+    return f'<span class="badge badge-{color}">{html.escape(label)}</span>'
 
 
-def _calibration_chart(score: dict[str, Any]) -> str:
-    points = []
-    for bucket in score["calibration"]:
-        x = 50 + bucket["mean_probability"] * 288
-        y = 210 - bucket["observed_frequency"] * 168
-        label = (
-            f"{bucket['bin']}: n={bucket['count']}, "
-            f"p={bucket['mean_probability']:.2f}, observed={bucket['observed_frequency']:.2f}"
+def _track_rows(tracks: list[dict[str, Any]]) -> str:
+    rows = []
+    for index, track in enumerate(tracks, 1):
+        metrics = " / ".join(track["metrics"][:2])
+        rows.append(
+            f'<tr><td><span class="track-index">0{index}</span></td>'
+            f'<td><button class="track-link" data-select-track="{html.escape(track["id"])}">'
+            f'<strong>{html.escape(track["name_zh"])}</strong><span>{html.escape(track["name_en"])}</span></button></td>'
+            f'<td>{_status_badge(track["status"])}</td>'
+            f'<td>{html.escape(metrics)}</td>'
+            f'<td><code>{html.escape(track["deliverable"].split("：", 1)[0])}</code></td></tr>'
         )
-        points.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6" class="point">'
-            f"<title>{html.escape(label)}</title></circle>"
+    return "".join(rows)
+
+
+def _source_rows(sources: list[dict[str, Any]]) -> str:
+    authority = {"primary": "一手来源", "secondary": "二手接口", "tool": "研究工具"}
+    rows = []
+    for source in sources:
+        rows.append(
+            f'<tr><td><a href="{html.escape(source["url"])}" target="_blank" rel="noreferrer"><strong>{html.escape(source["name"])}</strong> ↗</a>'
+            f'<span class="source-kind">{html.escape(source["kind"])}</span></td>'
+            f'<td><span class="authority authority-{html.escape(source["authority"])}">{authority[source["authority"]]}</span></td>'
+            f'<td>{html.escape(source["use_for"])}</td>'
+            f'<td>{html.escape(source["caution"])}</td></tr>'
         )
+    return "".join(rows)
+
+
+def _method_rows() -> str:
     return "".join(
-        [
-            '<svg class="chart" viewBox="0 0 390 242" role="img" '
-            'aria-label="Calibration chart for the synthetic smoke benchmark">',
-            '<line x1="50" y1="210" x2="338" y2="42" class="ideal" />',
-            '<line x1="50" y1="210" x2="338" y2="210" class="axis" />',
-            '<line x1="50" y1="210" x2="50" y2="42" class="axis" />',
-            '<text x="194" y="235" text-anchor="middle">Predicted probability</text>',
-            '<text x="15" y="126" text-anchor="middle" transform="rotate(-90 15 126)">Observed frequency</text>',
-            '<text x="50" y="225" text-anchor="middle">0</text>',
-            '<text x="338" y="225" text-anchor="middle">1</text>',
-            *points,
-            "</svg>",
-        ]
+        f'<tr><td><a href="{html.escape(item["url"])}" target="_blank" rel="noreferrer"><strong>{html.escape(item["name"])}</strong> ↗</a></td><td>{html.escape(item["use"])}</td></tr>'
+        for item in METHOD_REFERENCES
     )
 
 
-def _research_cards() -> str:
-    cards = []
-    accents = ("cyan", "green", "coral", "amber")
-    for index, reference in enumerate(RESEARCH_REFERENCES):
-        cards.append(
-            f'<a class="research-card accent-{accents[index % len(accents)]}" '
-            f'href="{html.escape(reference["url"])}" target="_blank" rel="noreferrer">'
-            f'<span class="research-theme">{html.escape(reference["theme"])}</span>'
-            f'<h3>{html.escape(reference["name"])}</h3>'
-            f'<p class="research-meta">{html.escape(reference["meta"])}</p>'
-            f'<p>{html.escape(reference["note"])}</p>'
-            '<span class="research-link">Open source ↗</span></a>'
-        )
-    return "".join(cards)
+def _initial_track(track: dict[str, Any]) -> str:
+    return f"""
+      <div class="track-detail-head"><div><p class="kicker" id="detail-en">{html.escape(track['name_en'])}</p><h3 id="detail-name">{html.escape(track['name_zh'])}</h3></div><div id="detail-status">{_status_badge(track['status'])}</div></div>
+      <p class="detail-question" id="detail-question">{html.escape(track['question'])}</p>
+      <div class="detail-grid">
+        <div><span class="field-label">帮助用户解决</span><p id="detail-value">{html.escape(track['user_value'])}</p></div>
+        <div><span class="field-label">输入</span><p id="detail-input">{html.escape(track['input'])}</p></div>
+        <div><span class="field-label">标准交付物</span><p id="detail-deliverable">{html.escape(track['deliverable'])}</p></div>
+        <div><span class="field-label">样例任务</span><p id="detail-sample">{html.escape(track['sample_task'])}</p></div>
+      </div>
+      <div class="detail-bottom"><div><span class="field-label">评分指标</span><div class="chips" id="detail-metrics">{''.join(f'<span>{html.escape(metric)}</span>' for metric in track['metrics'])}</div></div><div><span class="field-label">重点拦截</span><ul id="detail-failures">{''.join(f'<li>{html.escape(item)}</li>' for item in track['failure_modes'])}</ul></div></div>
+      <pre><code id="detail-command">python -m open_market_eval show-track --track {html.escape(track['id'])}</code></pre>
+    """
 
 
-def render_dashboard(score: dict[str, Any], questions: list[dict[str, Any]]) -> str:
-    agencies = sorted({_source_agency(question) for question in questions})
-    question_rows = []
-    for question in questions:
-        tags = " ".join(
-            f'<span class="tag">{html.escape(tag)}</span>' for tag in question["tags"][:2]
-        )
-        source = question["resolution_sources"][0]
-        question_rows.append(
-            f'<tr class="live-question" data-close="{html.escape(question["close_time"])}">'
-            f'<td><span class="agency">{html.escape(_source_agency(question))}</span>'
-            f'<strong>{html.escape(question["title"])}</strong><div class="tags">{tags}</div></td>'
-            f'<td><time datetime="{html.escape(question["close_time"])}">{html.escape(question["close_time"])}</time>'
-            '<span class="countdown">Calculating</span></td>'
-            f'<td><a class="source-link" href="{html.escape(source)}" target="_blank" rel="noreferrer">Primary source ↗</a></td>'
-            '<td><span class="status">Open</span></td></tr>'
-        )
-
-    prediction_rows = []
-    for row in score["predictions"]:
-        prediction_rows.append(
-            f"<tr><td><code>{html.escape(row['question_id'])}</code></td>"
-            f"<td>{row['probability']:.2f}</td><td>{row['outcome']}</td>"
-            f"<td>{row['brier']:.4f}</td></tr>"
-        )
-
-    metrics = "".join(
-        [
-            _metric("Resolved forecasts", str(score["n_scored"]), "Synthetic smoke fixture", "cyan"),
-            _metric("Mean Brier", f'{score["mean_brier"]:.4f}', "Lower is better", "green"),
-            _metric("Skill vs 0.5", f'{score["brier_skill_vs_0_5"]:.1%}', "Synthetic result only", "coral"),
-            _metric("Calibration error", f'{score["expected_calibration_error"]:.4f}', "Small-sample diagnostic", "amber"),
-        ]
-    )
+def render_dashboard(
+    score: dict[str, Any],
+    questions: list[dict[str, Any]],
+    tracks: list[dict[str, Any]],
+    sources: list[dict[str, Any]],
+) -> str:
+    del score
+    primary_count = sum(source["authority"] == "primary" for source in sources)
+    tracks_json = json.dumps(tracks, ensure_ascii=False).replace("</", "<\\/")
+    status_json = json.dumps(STATUS_LABELS, ensure_ascii=False).replace("</", "<\\/")
 
     return f"""<!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="OpenMarketEval: live, auditable evaluation for AI market-event forecasting agents.">
-  <meta name="theme-color" content="#f8fbfc">
-  <title>OpenMarketEval · Live Agent Forecasting Evaluation</title>
+  <meta name="description" content="A股研究 Agent 公共实验场：公告搜索、时点查数、事件预测、回测审计和研究备忘录。">
+  <meta name="theme-color" content="#f5f7f8">
+  <title>OpenMarketEval · A股研究 Agent 实验场</title>
   <style>
-    :root {{ --ink:#10191f; --muted:#5c6972; --line:#d5dfe4; --paper:#ffffff; --wash:#f3f7f8; --deep:#10232d; --cyan:#00a8d6; --green:#169b62; --coral:#f0523d; --amber:#d68a00; }}
+    :root {{ --ink:#172027; --muted:#61707a; --line:#d7dfe3; --paper:#fff; --wash:#f4f7f8; --deep:#12232c; --red:#d94335; --green:#11875d; --cyan:#008fb3; --amber:#b87300; --gray:#75818a; }}
     * {{ box-sizing:border-box; }}
     html {{ scroll-behavior:smooth; }}
-    body {{ margin:0; color:var(--ink); background:var(--paper); font:15px/1.58 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+    body {{ margin:0; color:var(--ink); background:var(--wash); font:14px/1.55 Inter, "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif; }}
+    button, input {{ font:inherit; }}
     a {{ color:inherit; }}
-    .shell {{ width:min(1180px, calc(100% - 40px)); margin:0 auto; }}
-    header {{ position:sticky; top:0; z-index:10; border-bottom:1px solid rgba(16,25,31,.12); background:rgba(255,255,255,.94); backdrop-filter:blur(14px); }}
-    nav {{ min-height:64px; display:flex; align-items:center; justify-content:space-between; gap:22px; }}
-    .brand {{ display:flex; align-items:center; gap:10px; color:var(--ink); font-weight:850; font-size:18px; text-decoration:none; }}
-    .brand-mark {{ width:26px; height:26px; border:5px solid var(--cyan); border-right-color:var(--green); border-bottom-color:var(--coral); border-radius:50%; }}
+    .shell {{ width:min(1280px, calc(100% - 36px)); margin:0 auto; }}
+    header {{ position:sticky; top:0; z-index:20; border-bottom:1px solid var(--line); background:rgba(255,255,255,.96); backdrop-filter:blur(12px); }}
+    nav {{ min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:20px; }}
+    .brand {{ display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:850; font-size:17px; }}
+    .brand-mark {{ width:23px; height:23px; border:5px solid var(--red); border-right-color:var(--green); border-bottom-color:var(--cyan); border-radius:50%; }}
+    .brand-sub {{ color:var(--muted); font-weight:600; font-size:12px; }}
     .nav-links {{ display:flex; align-items:center; gap:20px; }}
-    .nav-links a {{ color:var(--muted); font-size:14px; text-decoration:none; }}
-    .nav-links a:hover {{ color:var(--ink); }}
-    .repo-link {{ padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-weight:700; }}
-    .hero {{ min-height:610px; border-bottom:1px solid var(--line); background:#f8fbfc url("assets/open-market-eval-hero.png") center/cover no-repeat; }}
-    .hero .shell {{ min-height:610px; display:flex; align-items:center; }}
-    .hero-copy {{ width:min(430px, 43%); padding:50px 0 84px; }}
-    .eyebrow {{ margin:0 0 10px; color:var(--green); font-size:12px; font-weight:800; text-transform:uppercase; }}
-    .live-dot {{ display:inline-block; width:8px; height:8px; margin-right:7px; border-radius:50%; background:var(--green); box-shadow:0 0 0 4px rgba(22,155,98,.13); }}
-    h1 {{ margin:0; max-width:430px; font-size:56px; line-height:1.02; letter-spacing:0; }}
-    .lede {{ margin:20px 0 24px; color:#3c4d57; font-size:18px; max-width:420px; }}
-    .actions {{ display:flex; gap:10px; flex-wrap:wrap; }}
-    .button {{ display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 16px; border:1px solid var(--ink); border-radius:6px; color:white; background:var(--ink); text-decoration:none; font-weight:750; }}
+    .nav-links a {{ color:var(--muted); text-decoration:none; font-size:13px; }}
+    .nav-links .github {{ padding:6px 10px; border:1px solid var(--line); border-radius:5px; color:var(--ink); font-weight:750; }}
+    .workspace {{ display:grid; grid-template-columns:210px minmax(0,1fr); gap:22px; padding:22px 0 48px; }}
+    aside {{ position:sticky; top:80px; align-self:start; }}
+    .side-title {{ margin:0 0 10px; color:var(--muted); font-size:11px; font-weight:800; text-transform:uppercase; }}
+    .side-nav {{ display:flex; flex-direction:column; border-top:1px solid var(--line); }}
+    .side-nav a {{ padding:11px 4px; border-bottom:1px solid var(--line); color:var(--muted); text-decoration:none; }}
+    .side-nav a:hover {{ color:var(--ink); }}
+    .side-status {{ margin-top:24px; padding:14px 0; border-top:3px solid var(--red); border-bottom:1px solid var(--line); }}
+    .side-status strong {{ display:block; margin-bottom:5px; }} .side-status p {{ margin:0; color:var(--muted); font-size:12px; }}
+    main {{ min-width:0; }}
+    .intro {{ min-height:286px; display:grid; grid-template-columns:minmax(380px,.85fr) minmax(420px,1.15fr); border:1px solid var(--line); background:var(--paper); overflow:hidden; }}
+    .intro-copy {{ padding:30px 32px; }}
+    .kicker {{ margin:0 0 7px; color:var(--red); font-size:11px; font-weight:850; text-transform:uppercase; }}
+    h1 {{ margin:0; font-size:38px; line-height:1.12; letter-spacing:0; }}
+    .intro-copy > p:not(.kicker) {{ margin:15px 0 20px; max-width:560px; color:var(--muted); font-size:16px; }}
+    .actions {{ display:flex; gap:9px; flex-wrap:wrap; }}
+    .button {{ display:inline-flex; min-height:39px; align-items:center; justify-content:center; padding:0 13px; border:1px solid var(--ink); border-radius:5px; color:white; background:var(--ink); text-decoration:none; font-weight:750; }}
     .button.secondary {{ color:var(--ink); background:white; }}
-    .hero-proof {{ margin-top:30px; display:flex; gap:18px; color:var(--muted); font-size:12px; flex-wrap:wrap; }}
-    .hero-proof strong {{ display:block; color:var(--ink); font-size:18px; }}
-    .signal-band {{ border-bottom:1px solid var(--line); background:var(--deep); color:white; }}
-    .signals {{ display:grid; grid-template-columns:repeat(4,1fr); }}
-    .signal {{ min-height:98px; padding:18px 22px; border-right:1px solid rgba(255,255,255,.14); }}
-    .signal:first-child {{ border-left:1px solid rgba(255,255,255,.14); }}
-    .signal span {{ display:block; color:#9bb0bb; font-size:12px; }}
-    .signal strong {{ display:block; margin-top:3px; font-size:25px; }}
-    .signal-cyan strong {{ color:#5bdcff; }} .signal-green strong {{ color:#57d89c; }} .signal-coral strong {{ color:#ff806f; }} .signal-amber strong {{ color:#ffc55f; }}
-    section {{ padding:64px 0; border-bottom:1px solid var(--line); }}
-    .wash {{ background:var(--wash); }}
-    .section-head {{ display:grid; grid-template-columns:minmax(280px,.8fr) minmax(320px,1.2fr); gap:60px; align-items:end; margin-bottom:28px; }}
-    h2 {{ margin:0; font-size:34px; line-height:1.15; letter-spacing:0; }}
-    .section-head p, .note {{ color:var(--muted); margin:0; }}
-    .table-wrap {{ overflow:auto; border:1px solid var(--line); border-radius:6px; background:white; }}
-    table {{ width:100%; border-collapse:collapse; min-width:790px; }}
-    th, td {{ padding:15px 16px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }}
-    th {{ color:var(--muted); background:#f7f9fa; font-size:11px; text-transform:uppercase; }}
-    tr:last-child td {{ border-bottom:0; }}
-    td strong {{ display:block; max-width:560px; }}
-    td:nth-child(n+2) {{ white-space:nowrap; }}
-    .agency {{ display:block; margin-bottom:3px; color:var(--cyan); font-size:11px; font-weight:800; text-transform:uppercase; }}
-    .tags {{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }}
-    .tag {{ padding:2px 6px; border:1px solid var(--line); border-radius:4px; color:var(--muted); font-size:11px; }}
-    time {{ display:block; font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:12px; }}
-    .countdown {{ display:block; margin-top:5px; color:var(--muted); font-size:12px; }}
-    .source-link {{ color:var(--cyan); font-size:12px; font-weight:700; text-decoration:none; }}
-    .status {{ display:inline-flex; padding:3px 8px; border:1px solid rgba(22,155,98,.28); border-radius:4px; color:var(--green); background:rgba(22,155,98,.08); font-size:11px; font-weight:800; text-transform:uppercase; }}
-    .status.closed {{ border-color:rgba(240,82,61,.25); color:var(--coral); background:rgba(240,82,61,.07); }}
-    .protocol {{ display:grid; grid-template-columns:repeat(5,1fr); gap:0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }}
-    .protocol-step {{ position:relative; padding:24px 18px; border-right:1px solid var(--line); }}
-    .protocol-step:last-child {{ border-right:0; }}
-    .step-no {{ color:var(--cyan); font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:12px; font-weight:800; }}
-    .protocol-step:nth-child(2) .step-no {{ color:var(--green); }} .protocol-step:nth-child(3) .step-no {{ color:var(--amber); }} .protocol-step:nth-child(4) .step-no {{ color:var(--coral); }}
-    .protocol-step h3 {{ margin:8px 0 6px; font-size:17px; }}
-    .protocol-step p {{ margin:0; color:var(--muted); font-size:13px; }}
-    .evaluation-grid {{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:30px; }}
-    .eval-layer {{ padding-top:15px; border-top:4px solid var(--cyan); }}
-    .eval-layer:nth-child(2) {{ border-color:var(--green); }} .eval-layer:nth-child(3) {{ border-color:var(--coral); }} .eval-layer:nth-child(4) {{ border-color:var(--amber); }}
-    .eval-layer h3 {{ margin:0 0 6px; font-size:17px; }} .eval-layer p {{ margin:0; color:var(--muted); font-size:13px; }}
-    .layer-state {{ display:inline-block; margin-top:10px; font-size:11px; font-weight:800; text-transform:uppercase; }}
-    .state-live {{ color:var(--green); }} .state-next {{ color:var(--amber); }}
-    .research-grid {{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }}
-    .research-card {{ min-height:250px; padding:20px; border:1px solid var(--line); border-top:4px solid var(--cyan); border-radius:6px; background:white; text-decoration:none; transition:transform .18s ease, box-shadow .18s ease; }}
-    .research-card:hover {{ transform:translateY(-3px); box-shadow:0 12px 30px rgba(16,25,31,.09); }}
-    .research-card.accent-green {{ border-top-color:var(--green); }} .research-card.accent-coral {{ border-top-color:var(--coral); }} .research-card.accent-amber {{ border-top-color:var(--amber); }}
-    .research-theme {{ color:var(--cyan); font-size:11px; font-weight:800; text-transform:uppercase; }}
-    .accent-green .research-theme {{ color:var(--green); }} .accent-coral .research-theme {{ color:var(--coral); }} .accent-amber .research-theme {{ color:var(--amber); }}
-    .research-card h3 {{ margin:14px 0 4px; font-size:18px; line-height:1.25; }}
-    .research-meta {{ min-height:38px; margin:0 0 13px !important; color:var(--muted); font-size:12px; }}
-    .research-card p {{ margin:0; color:#44545d; font-size:13px; }}
-    .research-link {{ display:block; margin-top:16px; color:var(--ink); font-size:12px; font-weight:800; }}
-    .disclosure {{ margin-top:18px; color:var(--muted); font-size:12px; }}
-    .warning {{ margin:0 0 20px; padding:13px 15px; border-left:4px solid var(--coral); background:#fff5f3; }}
-    .metrics {{ display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--line); border-radius:6px; overflow:hidden; background:white; }}
-    .metric {{ min-width:0; padding:18px; border-right:1px solid var(--line); border-top:4px solid var(--cyan); }}
-    .metric:last-child {{ border-right:0; }} .metric.accent-green {{ border-top-color:var(--green); }} .metric.accent-coral {{ border-top-color:var(--coral); }} .metric.accent-amber {{ border-top-color:var(--amber); }}
-    .metric p {{ margin:0; }} .metric-label {{ color:var(--muted); font-size:12px; }} .metric-value {{ margin-top:4px !important; font-size:30px; font-weight:850; }} .metric-note {{ margin-top:3px !important; color:var(--muted); font-size:11px; }}
-    .analysis {{ margin-top:24px; display:grid; grid-template-columns:minmax(300px,.8fr) minmax(0,1.2fr); gap:26px; align-items:center; }}
-    .chart {{ width:100%; max-height:310px; color:var(--muted); }} .chart text {{ fill:var(--muted); font-size:11px; }} .axis {{ stroke:var(--ink); stroke-width:1.5; }} .ideal {{ stroke:var(--green); stroke-width:2; stroke-dasharray:6 5; }} .point {{ fill:var(--cyan); stroke:white; stroke-width:2; }}
-    .submit-band {{ background:var(--deep); color:white; }}
-    .submit-layout {{ display:grid; grid-template-columns:.8fr 1.2fr; gap:60px; align-items:center; }}
-    .submit-layout h2 {{ max-width:430px; }} .submit-layout p {{ color:#afc0c8; }}
-    pre {{ margin:0; padding:20px; overflow:auto; border:1px solid rgba(255,255,255,.18); border-radius:6px; background:#08171f; color:#d9f5ff; font:12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; }}
-    code {{ font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:12px; }}
-    footer {{ padding:34px 0 48px; color:var(--muted); }}
-    .footer-layout {{ display:flex; justify-content:space-between; gap:30px; flex-wrap:wrap; }}
-    @media (max-width:980px) {{ h1 {{ font-size:50px; }} .hero-copy {{ width:46%; }} .signals, .research-grid {{ grid-template-columns:repeat(2,1fr); }} .signal:nth-child(3) {{ border-left:1px solid rgba(255,255,255,.14); }} .signal:nth-child(-n+2) {{ border-bottom:1px solid rgba(255,255,255,.14); }} .protocol {{ grid-template-columns:repeat(3,1fr); }} .protocol-step:nth-child(3) {{ border-right:0; }} .protocol-step:nth-child(-n+3) {{ border-bottom:1px solid var(--line); }} .evaluation-grid {{ grid-template-columns:repeat(2,1fr); }} }}
-    @media (max-width:760px) {{ .shell {{ width:min(100% - 28px, 1180px); }} header {{ position:static; }} nav {{ min-height:58px; }} .nav-links a:not(.repo-link) {{ display:none; }} .hero {{ min-height:580px; background-size:auto 580px; background-position:left center; }} .hero .shell {{ min-height:580px; align-items:flex-start; }} .hero-copy {{ width:100%; max-width:470px; padding:38px 0 28px; }} h1 {{ font-size:43px; max-width:390px; }} .lede {{ max-width:420px; font-size:17px; }} .hero-proof {{ max-width:400px; margin-top:22px; }} section {{ padding:48px 0; }} .section-head, .submit-layout {{ grid-template-columns:1fr; gap:18px; align-items:start; }} h2 {{ font-size:29px; }} .analysis {{ grid-template-columns:1fr; }} .metrics {{ grid-template-columns:repeat(2,1fr); }} .metric:nth-child(2) {{ border-right:0; }} .metric:nth-child(-n+2) {{ border-bottom:1px solid var(--line); }} }}
-    @media (max-width:520px) {{ .research-grid, .evaluation-grid {{ grid-template-columns:1fr; }} .signals {{ grid-template-columns:repeat(2,1fr); }} .signal {{ min-height:96px; padding:15px 14px; border-bottom:1px solid rgba(255,255,255,.14); }} .signal:nth-child(odd) {{ border-left:1px solid rgba(255,255,255,.14); }} .signal:nth-child(n+3) {{ border-bottom:0; }} .signal strong {{ font-size:20px; }} .protocol {{ grid-template-columns:1fr; }} .protocol-step {{ border-right:0; border-bottom:1px solid var(--line); }} .protocol-step:last-child {{ border-bottom:0; }} .metrics {{ grid-template-columns:1fr; }} .metric {{ border-right:0; border-bottom:1px solid var(--line); }} .metric:last-child {{ border-bottom:0; }} .actions {{ align-items:stretch; flex-direction:column; max-width:290px; }} .button {{ width:100%; }} }}
-    @media (prefers-reduced-motion:reduce) {{ html {{ scroll-behavior:auto; }} .research-card {{ transition:none; }} }}
+    .intro-visual {{ min-height:286px; background:#fafcfc url("assets/a-share-agent-lab.png") center/cover no-repeat; border-left:1px solid var(--line); }}
+    .audience {{ display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line); border-top:0; background:var(--deep); color:white; }}
+    .persona {{ display:grid; grid-template-columns:36px 1fr; gap:12px; padding:17px 22px; }} .persona + .persona {{ border-left:1px solid rgba(255,255,255,.15); }}
+    .persona-no {{ color:#ff796c; font:800 18px/1 ui-monospace, monospace; }} .persona:nth-child(2) .persona-no {{ color:#51d3a0; }}
+    .persona strong {{ display:block; }} .persona p {{ margin:3px 0 0; color:#abc0ca; font-size:12px; }}
+    .summary {{ display:grid; grid-template-columns:repeat(4,1fr); margin-top:16px; border:1px solid var(--line); background:var(--paper); }}
+    .summary-item {{ padding:15px 18px; border-right:1px solid var(--line); }} .summary-item:last-child {{ border-right:0; }}
+    .summary-item span {{ display:block; color:var(--muted); font-size:11px; }} .summary-item strong {{ display:block; margin-top:2px; font-size:22px; }}
+    .summary-item:nth-child(1) strong {{ color:var(--red); }} .summary-item:nth-child(2) strong {{ color:var(--cyan); }} .summary-item:nth-child(3) strong {{ color:var(--green); }} .summary-item:nth-child(4) strong {{ color:var(--amber); }}
+    section {{ margin-top:22px; border:1px solid var(--line); background:var(--paper); }}
+    .section-head {{ display:flex; align-items:end; justify-content:space-between; gap:24px; padding:20px 22px; border-bottom:1px solid var(--line); }}
+    h2 {{ margin:0; font-size:23px; letter-spacing:0; }} .section-head p {{ margin:0; max-width:610px; color:var(--muted); }}
+    .table-wrap {{ overflow:auto; }}
+    table {{ width:100%; border-collapse:collapse; min-width:820px; }}
+    th, td {{ padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }} tr:last-child td {{ border-bottom:0; }}
+    th {{ color:var(--muted); background:#f7f9fa; font-size:11px; font-weight:750; text-transform:uppercase; }}
+    .track-index {{ color:#9aa5ab; font:700 12px ui-monospace, monospace; }}
+    .track-link {{ padding:0; border:0; background:transparent; color:var(--ink); cursor:pointer; text-align:left; }} .track-link strong, .track-link span {{ display:block; }} .track-link span {{ color:var(--muted); font-size:11px; }} .track-link:hover strong {{ color:var(--red); }}
+    .badge {{ display:inline-flex; padding:3px 7px; border:1px solid currentColor; border-radius:4px; font-size:10px; font-weight:800; white-space:nowrap; }}
+    .badge-green {{ color:var(--green); background:#eff9f5; }} .badge-cyan {{ color:var(--cyan); background:#eef9fb; }} .badge-amber {{ color:var(--amber); background:#fff8e9; }} .badge-gray {{ color:var(--gray); background:#f3f5f6; }}
+    code, pre {{ font-family:ui-monospace, SFMono-Regular, Consolas, monospace; }} code {{ font-size:12px; }}
+    .track-tabs {{ display:flex; overflow:auto; border-bottom:1px solid var(--line); background:#fafbfb; }}
+    .track-tab {{ min-width:max-content; padding:11px 16px; border:0; border-right:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }} .track-tab.active {{ color:var(--red); background:white; box-shadow:inset 0 -3px var(--red); font-weight:800; }}
+    .track-detail {{ padding:22px; }}
+    .track-detail-head {{ display:flex; justify-content:space-between; align-items:start; gap:20px; }} .track-detail h3 {{ margin:0; font-size:27px; }}
+    .detail-question {{ margin:12px 0 20px; font-size:16px; font-weight:650; max-width:900px; }}
+    .detail-grid {{ display:grid; grid-template-columns:repeat(2,1fr); border-top:1px solid var(--line); border-left:1px solid var(--line); }}
+    .detail-grid > div {{ min-height:112px; padding:14px 16px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }}
+    .field-label {{ display:block; margin-bottom:5px; color:var(--muted); font-size:10px; font-weight:800; text-transform:uppercase; }} .detail-grid p {{ margin:0; }}
+    .detail-bottom {{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:20px; }} .detail-bottom ul {{ margin:5px 0 0; padding-left:18px; columns:2; }}
+    .chips {{ display:flex; gap:6px; flex-wrap:wrap; }} .chips span {{ padding:4px 7px; border:1px solid var(--line); border-radius:4px; background:var(--wash); font-size:11px; }}
+    pre {{ margin:20px 0 0; padding:13px 15px; overflow:auto; border:1px solid #223943; background:var(--deep); color:#d9eef4; }}
+    .audit-layout {{ display:grid; grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr); }}
+    .checklist {{ padding:8px 22px 20px; }}
+    .check-row {{ display:grid; grid-template-columns:24px 1fr; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer; }} .check-row:last-child {{ border-bottom:0; }}
+    .check-row input {{ width:17px; height:17px; margin-top:2px; accent-color:var(--green); }} .check-row strong {{ display:block; }} .check-row span {{ display:block; color:var(--muted); font-size:12px; }}
+    .audit-score {{ display:flex; flex-direction:column; justify-content:center; padding:26px; border-left:1px solid var(--line); background:#f7f9fa; }}
+    .score-value {{ font-size:42px; font-weight:850; }} .score-value span {{ color:var(--muted); font-size:16px; }} .score-label {{ color:var(--muted); }}
+    .progress {{ height:8px; margin:13px 0; background:#dce3e6; }} .progress span {{ display:block; width:0; height:100%; background:var(--red); transition:width .2s ease, background .2s ease; }}
+    .score-message {{ margin:0; font-weight:650; }}
+    .source-kind {{ display:block; color:var(--muted); font-size:10px; }} .authority {{ font-size:11px; font-weight:800; white-space:nowrap; }} .authority-primary {{ color:var(--green); }} .authority-secondary {{ color:var(--amber); }} .authority-tool {{ color:var(--cyan); }}
+    .method-grid {{ display:grid; grid-template-columns:1fr 1fr; }} .method-grid > div:first-child {{ border-right:1px solid var(--line); }}
+    .method-grid h3 {{ margin:0; padding:16px 18px; border-bottom:1px solid var(--line); font-size:16px; }} .method-grid table {{ min-width:0; }}
+    .build-status {{ display:grid; grid-template-columns:repeat(4,1fr); }} .build-item {{ padding:17px; border-right:1px solid var(--line); }} .build-item:last-child {{ border-right:0; }} .build-item strong {{ display:block; }} .build-item span {{ color:var(--muted); font-size:11px; }}
+    .participate {{ display:grid; grid-template-columns:.9fr 1.1fr; background:var(--deep); color:white; }} .participate-copy {{ padding:26px; }} .participate h2 {{ font-size:26px; }} .participate p {{ color:#afc2cb; }} .participate-actions {{ display:flex; align-items:center; gap:10px; padding:26px; border-left:1px solid rgba(255,255,255,.15); flex-wrap:wrap; }} .participate .button {{ border-color:white; }} .participate .button.secondary {{ color:white; background:transparent; }}
+    .disclaimer {{ padding:14px 18px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; }}
+    footer {{ padding:24px 0 40px; color:var(--muted); }} .footer-line {{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }}
+    @media (max-width:1000px) {{ .workspace {{ grid-template-columns:1fr; }} aside {{ display:none; }} .intro {{ grid-template-columns:1fr 1fr; }} .summary, .build-status {{ grid-template-columns:repeat(2,1fr); }} .summary-item:nth-child(2), .build-item:nth-child(2) {{ border-right:0; }} .summary-item:nth-child(-n+2), .build-item:nth-child(-n+2) {{ border-bottom:1px solid var(--line); }} }}
+    @media (max-width:760px) {{ .shell {{ width:min(100% - 22px,1280px); }} .nav-links a:not(.github) {{ display:none; }} .brand-sub {{ display:none; }} .workspace {{ padding-top:11px; }} .intro {{ grid-template-columns:1fr; }} .intro-copy {{ padding:23px 20px; }} h1 {{ font-size:31px; }} .intro-visual {{ min-height:190px; border-left:0; border-top:1px solid var(--line); background-position:center; }} .audience {{ grid-template-columns:1fr; }} .persona + .persona {{ border-left:0; border-top:1px solid rgba(255,255,255,.15); }} .section-head {{ align-items:start; flex-direction:column; }} .detail-grid, .detail-bottom, .audit-layout, .method-grid, .participate {{ grid-template-columns:1fr; }} .detail-bottom ul {{ columns:1; }} .audit-score, .participate-actions {{ border-left:0; border-top:1px solid var(--line); }} .method-grid > div:first-child {{ border-right:0; border-bottom:1px solid var(--line); }} .track-detail {{ padding:18px 14px; }} .track-detail h3 {{ font-size:23px; }} }}
+    @media (max-width:480px) {{ .summary, .build-status {{ grid-template-columns:1fr; }} .summary-item, .build-item {{ border-right:0; border-bottom:1px solid var(--line); }} .summary-item:last-child, .build-item:last-child {{ border-bottom:0; }} .actions, .participate-actions {{ align-items:stretch; flex-direction:column; }} .button {{ width:100%; }} }}
+    @media (prefers-reduced-motion:reduce) {{ html {{ scroll-behavior:auto; }} .progress span {{ transition:none; }} }}
   </style>
 </head>
 <body>
-  <header><nav class="shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>OpenMarketEval</a><div class="nav-links"><a href="#live">Live round</a><a href="#method">Method</a><a href="#research">Research</a><a class="repo-link" href="https://github.com/Alfonsobang/open-market-eval">GitHub ↗</a></div></nav></header>
-  <main id="top">
-    <div class="hero"><div class="shell"><div class="hero-copy">
-      <p class="eyebrow"><span class="live-dot"></span>Live sealed evaluation · Round 2026-08</p>
-      <h1>Forecast the event. Audit the agent.</h1>
-      <p class="lede">A time-gated benchmark for market-research agents: public evidence, immutable probabilities, official resolution, and calibration-aware scoring.</p>
-      <div class="actions"><a class="button" href="#live">Explore live questions</a><a class="button secondary" href="https://github.com/Alfonsobang/open-market-eval#one-minute-demo">Run the harness ↗</a></div>
-      <div class="hero-proof"><span><strong>{len(questions)}</strong>live questions</span><span><strong>L2</strong>pre-event seal</span><span><strong>SHA-256</strong>audit trail</span></div>
-    </div></div></div>
-    <div class="signal-band"><div class="shell signals">
-      <div class="signal signal-cyan"><span>Open now</span><strong id="open-count">{len(questions)} / {len(questions)}</strong></div>
-      <div class="signal signal-green"><span>Next close</span><strong id="next-close">Calculating</strong></div>
-      <div class="signal signal-coral"><span>Resolution authorities</span><strong>{len(agencies)} official</strong></div>
-      <div class="signal signal-amber"><span>Leaderboard policy</span><strong>No deleted misses</strong></div>
-    </div></div>
-    <section id="live"><div class="shell">
-      <div class="section-head"><div><p class="eyebrow">Round 2026-08</p><h2>Questions that resolve in the real world</h2></div><p>Each event has a fixed cutoff, objective binary rule, and primary public source. A forecast only qualifies as L2 when its Git commit predates the close time.</p></div>
-      <div class="table-wrap"><table><thead><tr><th>Question</th><th>Forecast closes</th><th>Resolution</th><th>Status</th></tr></thead><tbody>{''.join(question_rows)}</tbody></table></div>
-    </div></section>
-    <section id="method" class="wash"><div class="shell">
-      <div class="section-head"><div><p class="eyebrow">Evaluation architecture</p><h2>One artifact from evidence to postmortem</h2></div><p>The benchmark separates research quality from portfolio returns. It asks whether an agent assigned a useful probability using only information available at the time.</p></div>
-      <div class="protocol">
-        <article class="protocol-step"><span class="step-no">01</span><h3>Specify</h3><p>Freeze the event, threshold, deadline, and official resolution rule.</p></article>
-        <article class="protocol-step"><span class="step-no">02</span><h3>Research</h3><p>Capture source URLs, publication timestamps, thesis, and falsifiers.</p></article>
-        <article class="protocol-step"><span class="step-no">03</span><h3>Seal</h3><p>Hash question and forecast ledgers before the event closes.</p></article>
-        <article class="protocol-step"><span class="step-no">04</span><h3>Resolve</h3><p>Use the predeclared primary release and preserve the rationale.</p></article>
-        <article class="protocol-step"><span class="step-no">05</span><h3>Score</h3><p>Report Brier, log loss, calibration, baseline skill, and every miss.</p></article>
-      </div>
-      <div class="evaluation-grid">
-        <article class="eval-layer"><h3>Outcome quality</h3><p>Proper scoring rules reward honest probability estimates, not confident storytelling.</p><span class="layer-state state-live">Implemented</span></article>
-        <article class="eval-layer"><h3>Temporal integrity</h3><p>Evidence timestamps, close-time validation, immutable files, and public commits limit hindsight.</p><span class="layer-state state-live">Implemented</span></article>
-        <article class="eval-layer"><h3>Research process</h3><p>Source diversity, retrieval freshness, tool traces, latency, and cost expose how the answer was produced.</p><span class="layer-state state-next">Next track</span></article>
-        <article class="eval-layer"><h3>Robustness</h3><p>Repeated trials, logical consistency, abstention, and bootstrap intervals test reliability beyond one run.</p><span class="layer-state state-next">Next track</span></article>
-      </div>
-    </div></section>
-    <section id="research"><div class="shell">
-      <div class="section-head"><div><p class="eyebrow">Research compass</p><h2>Built in conversation with the frontier</h2></div><p>These papers and open frameworks inform the roadmap. They are cited as technical lineage, not as endorsements of OpenMarketEval.</p></div>
-      <div class="research-grid">{_research_cards()}</div>
-      <p class="disclosure">Recent 2026 items are preprints and should be read as emerging methods, not settled consensus. OpenMarketEval currently implements live time-gating, artifact sealing, official resolution, proper scores, and a Harbor task; other techniques above are explicit roadmap directions.</p>
-    </div></section>
-    <section id="scorecard" class="wash"><div class="shell">
-      <div class="section-head"><div><p class="eyebrow">Harness verification</p><h2>Scoring output you can inspect</h2></div><p>The bundled fixture makes CI deterministic and demonstrates the report contract. Live model results will appear only after questions resolve.</p></div>
-      <p class="warning"><strong>Synthetic fixture:</strong> these values test software behavior. They are not forecasting performance, a return backtest, or investment evidence.</p>
-      <div class="metrics">{metrics}</div>
-      <div class="analysis"><div>{_calibration_chart(score)}</div><div class="table-wrap"><table><thead><tr><th>Question</th><th>p</th><th>Outcome</th><th>Brier</th></tr></thead><tbody>{''.join(prediction_rows)}</tbody></table></div></div>
-    </div></section>
-    <section class="submit-band"><div class="shell submit-layout"><div><p class="eyebrow">Open protocol</p><h2>Bring any model, scaffold, or research agent.</h2><p>Your adapter reads one question from stdin and returns a probability as JSON. The harness skips closed questions, validates timestamps, and writes a PR-ready seal.</p></div><pre><code>python -m open_market_eval prepare-submission \\
-  --questions live/rounds/2026-08/questions.jsonl \\
-  --command "python path/to/your_agent.py" \\
-  --forecaster your-agent-name \\
-  --output-dir live/rounds/2026-08/submissions/your-handle</code></pre></div></section>
-  </main>
-  <footer><div class="shell footer-layout"><span>OpenMarketEval evaluates research processes. Nothing here is investment advice.</span><span><a href="https://github.com/Alfonsobang/open-market-eval/issues/1">Join the live round</a> · <a href="https://github.com/Alfonsobang/open-market-eval/blob/main/CONTRIBUTING.md">Contribute</a></span></div></footer>
+  <header><nav class="shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>OpenMarketEval <span class="brand-sub">A股研究 Agent 实验场</span></a><div class="nav-links"><a href="#tracks">实验任务</a><a href="#audit">防泄漏自检</a><a href="#sources">数据源</a><a href="#join">参与</a><a class="github" href="https://github.com/Alfonsobang/open-market-eval">GitHub ↗</a></div></nav></header>
+  <div class="shell workspace" id="top">
+    <aside><p class="side-title">实验导航</p><nav class="side-nav"><a href="#tracks">01 · 五类任务</a><a href="#workbench">02 · 任务工作台</a><a href="#audit">03 · 回测防泄漏</a><a href="#sources">04 · 来源注册表</a><a href="#methods">05 · 技术路线</a><a href="#join">06 · 加入试验</a></nav><div class="side-status"><strong>当前阶段：v0.3 规格期</strong><p>A股任务目录已发布。首个公开数据包和 Agent 对比尚未发布，不展示虚构成绩。</p></div></aside>
+    <main>
+      <div class="intro"><div class="intro-copy"><p class="kicker">Public A-share agent experiment</p><h1>A股研究 Agent 公共实验场</h1><p>不提供荐股。我们把公告搜索、财务查数、事件预测、回测审计和研究写作拆成可复现、可评分、可复盘的公开任务。</p><div class="actions"><a class="button" href="#workbench">打开任务工作台</a><a class="button secondary" href="https://github.com/Alfonsobang/open-market-eval/tree/main/benchmarks/a-share-lab">查看机器可读规格 ↗</a></div></div><div class="intro-visual" role="img" aria-label="A股研究 Agent 的五轨实验流程示意图"></div></div>
+      <div class="audience"><div class="persona"><span class="persona-no">01</span><div><strong>研究基础不完整的 A 股研究者</strong><p>需要一套不会把搜索摘要、错误口径和漂亮回测当成事实的工作规范。</p></div></div><div class="persona"><span class="persona-no">02</span><div><strong>对 AI 投资有兴趣的实践者</strong><p>需要知道 Agent 到底会查、会算、会预测，还是只会生成听起来合理的答案。</p></div></div></div>
+      <div class="summary"><div class="summary-item"><span>研究任务轨道</span><strong>{len(tracks)}</strong></div><div class="summary-item"><span>已注册公共来源</span><strong>{len(sources)}</strong></div><div class="summary-item"><span>一手官方来源</span><strong>{primary_count}</strong></div><div class="summary-item"><span>A股公开成绩</span><strong>0</strong><span>等待首批真实试验</span></div></div>
+
+      <section id="tracks"><div class="section-head"><div><p class="kicker">Experiment catalog</p><h2>五类真正可验证的研究任务</h2></div><p>先验证 Agent 完成研究工作的能力，再讨论它能否形成投资判断。每条轨道都有标准输入、交付物、评分指标和失败模式。</p></div><div class="table-wrap"><table><thead><tr><th>#</th><th>任务</th><th>状态</th><th>核心指标</th><th>交付物</th></tr></thead><tbody>{_track_rows(tracks)}</tbody></table></div></section>
+
+      <section id="workbench"><div class="section-head"><div><p class="kicker">Interactive specification</p><h2>任务工作台</h2></div><p>选择一条轨道，直接查看它解决什么问题、需要什么输入、如何评分以及最容易出现什么错误。</p></div><div class="track-tabs">{''.join(f'<button class="track-tab{" active" if index == 0 else ""}" data-track="{html.escape(track["id"])}">{html.escape(track["name_zh"])}</button>' for index, track in enumerate(tracks))}</div><div class="track-detail">{_initial_track(tracks[0])}</div></section>
+
+      <section id="audit"><div class="section-head"><div><p class="kicker">Self-check</p><h2>你的 A 股回测经得起审计吗？</h2></div><p>逐项确认。这个自检不证明策略有效，但任何未通过项都足以让高收益曲线失去可信度。</p></div><div class="audit-layout"><div class="checklist">
+        <label class="check-row"><input type="checkbox"><span><strong>声明统一的信息截止时间</strong><span>行情、公告、财务字段和股票池都不能晚于信号时点。</span></span></label>
+        <label class="check-row"><input type="checkbox"><span><strong>使用历史时点股票池</strong><span>新上市、退市、ST 和指数调样不能用今天的名单向过去投射。</span></span></label>
+        <label class="check-row"><input type="checkbox"><span><strong>信号与成交价格严格分离</strong><span>收盘后生成的信号不能在同一收盘价成交。</span></span></label>
+        <label class="check-row"><input type="checkbox"><span><strong>成交使用可交易原始价格</strong><span>前复权序列适合计算收益，不应直接充当跨除权日成交价格。</span></span></label>
+        <label class="check-row"><input type="checkbox"><span><strong>建模 T+1、停牌和涨跌停</strong><span>无法买入或卖出的订单不能假设成交。</span></span></label>
+        <label class="check-row"><input type="checkbox"><span><strong>计入双边成本与滑点压力</strong><span>至少报告多档成本下结果，而不是只展示零成本曲线。</span></span></label>
+        <label class="check-row"><input type="checkbox"><span><strong>财务数据按首次可见版本对齐</strong><span>更正公告和供应商更新不能提前进入历史样本。</span></span></label>
+        <label class="check-row"><input type="checkbox"><span><strong>保留全部实验与失败结果</strong><span>调参、失败窗口和不利市场阶段都进入实验账本。</span></span></label>
+      </div><div class="audit-score"><span class="field-label">基础可信度检查</span><div class="score-value" id="audit-value">0 <span>/ 8</span></div><div class="progress"><span id="audit-progress"></span></div><p class="score-message" id="audit-message">先完成时点、股票池和成交约束，再看收益率。</p><p class="score-label">该工具只检查研究设计，不评价任何策略或证券。</p></div></div></section>
+
+      <section id="sources"><div class="section-head"><div><p class="kicker">Source registry</p><h2>先找原始来源，再调用便利接口</h2></div><p>来源层级是评测的一部分。官方披露用于事实和结算；开源接口用于接入与交叉验证，不能自动升级为一手证据。</p></div><div class="table-wrap"><table><thead><tr><th>来源</th><th>层级</th><th>适用任务</th><th>使用警告</th></tr></thead><tbody>{_source_rows(sources)}</tbody></table></div></section>
+
+      <section id="methods"><div class="section-head"><div><p class="kicker">Method stack</p><h2>技术路线与建设状态</h2></div><p>借鉴前沿工作，但不把引用当背书。2026 年预印本只代表值得验证的方向，不代表已经形成行业共识。</p></div><div class="method-grid"><div><h3>方法与开源基础</h3><table><tbody>{_method_rows()}</tbody></table></div><div><h3>当前诚实状态</h3><div class="build-status"><div class="build-item"><strong>已完成</strong><span>五轨规格、来源注册表、封存与评分核心</span></div><div class="build-item"><strong>运行中</strong><span>{len(questions)} 个宏观 L2 问题验证基础设施</span></div><div class="build-item"><strong>下一交付</strong><span>10 个公告搜索与时点查数公开任务</span></div><div class="build-item"><strong>尚未声称</strong><span>A股模型排名、超额收益或真实投资能力</span></div></div></div></div><div class="disclaimer">OpenMarketEval 不包含私有公司数据、真实用户数据或专有工作流。所有任务仅用于研究与评测，不构成投资建议。</div></section>
+
+      <section id="join" class="participate"><div class="participate-copy"><p class="kicker">Build in public</p><h2>首批试验需要真实问题，不需要漂亮口号。</h2><p>最有价值的贡献是：一个能明确结算的 A 股研究任务、一个会暴露常见错误的 verifier，或一个可复现的 Agent adapter。</p></div><div class="participate-actions"><a class="button" href="https://github.com/Alfonsobang/open-market-eval/issues">认领首批任务 ↗</a><a class="button secondary" href="https://github.com/Alfonsobang/open-market-eval/blob/main/CONTRIBUTING.md">贡献规范 ↗</a></div></section>
+    </main>
+  </div>
+  <footer><div class="shell footer-line"><span>OpenMarketEval · A股研究 Agent 公共实验场</span><span>公开数据 · 时点安全 · 可复现 · 不构成投资建议</span></div></footer>
   <script>
-    const rows = [...document.querySelectorAll('.live-question')];
-    const compact = new Intl.DateTimeFormat(undefined, {{ month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short' }});
-    function duration(milliseconds) {{
-      if (milliseconds <= 0) return 'Forecasting closed';
-      const hours = Math.floor(milliseconds / 3600000);
-      const days = Math.floor(hours / 24);
-      return days ? `${{days}}d ${{hours % 24}}h remaining` : `${{hours}}h remaining`;
+    const tracks = {tracks_json};
+    const statusLabels = {status_json};
+    const byId = Object.fromEntries(tracks.map(track => [track.id, track]));
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[char]));
+    function selectTrack(id) {{
+      const track = byId[id];
+      if (!track) return;
+      document.querySelectorAll('.track-tab').forEach(button => button.classList.toggle('active', button.dataset.track === id));
+      document.querySelector('#detail-en').textContent = track.name_en;
+      document.querySelector('#detail-name').textContent = track.name_zh;
+      const [label, color] = statusLabels[track.status] || [track.status, 'gray'];
+      document.querySelector('#detail-status').innerHTML = `<span class="badge badge-${{color}}">${{escapeHtml(label)}}</span>`;
+      for (const [field, value] of Object.entries({{question:track.question, value:track.user_value, input:track.input, deliverable:track.deliverable, sample:track.sample_task}})) document.querySelector(`#detail-${{field}}`).textContent = value;
+      document.querySelector('#detail-metrics').innerHTML = track.metrics.map(item => `<span>${{escapeHtml(item)}}</span>`).join('');
+      document.querySelector('#detail-failures').innerHTML = track.failure_modes.map(item => `<li>${{escapeHtml(item)}}</li>`).join('');
+      document.querySelector('#detail-command').textContent = `python -m open_market_eval show-track --track ${{track.id}}`;
     }}
-    function refreshDeadlines() {{
-      const now = Date.now();
-      const open = [];
-      for (const row of rows) {{
-        const close = Date.parse(row.dataset.close);
-        const closed = now >= close;
-        const status = row.querySelector('.status');
-        status.textContent = closed ? 'Closed' : 'Open';
-        status.classList.toggle('closed', closed);
-        row.querySelector('.countdown').textContent = duration(close - now);
-        const time = row.querySelector('time');
-        time.textContent = compact.format(new Date(close));
-        if (!closed) open.push(close);
-      }}
-      document.querySelector('#open-count').textContent = `${{open.length}} / ${{rows.length}}`;
-      document.querySelector('#next-close').textContent = open.length ? duration(Math.min(...open) - now).replace(' remaining','') : 'Round closed';
+    document.querySelectorAll('[data-track]').forEach(button => button.addEventListener('click', () => selectTrack(button.dataset.track)));
+    document.querySelectorAll('[data-select-track]').forEach(button => button.addEventListener('click', () => {{ selectTrack(button.dataset.selectTrack); document.querySelector('#workbench').scrollIntoView(); }}));
+    const checks = [...document.querySelectorAll('.check-row input')];
+    function updateAudit() {{
+      const count = checks.filter(input => input.checked).length;
+      document.querySelector('#audit-value').innerHTML = `${{count}} <span>/ 8</span>`;
+      const progress = document.querySelector('#audit-progress');
+      progress.style.width = `${{count / 8 * 100}}%`;
+      progress.style.background = count === 8 ? 'var(--green)' : count >= 5 ? 'var(--amber)' : 'var(--red)';
+      document.querySelector('#audit-message').textContent = count === 8 ? '基础约束已覆盖，下一步检查数据质量和样本外稳定性。' : count >= 5 ? '仍有关键缺口，暂时不要解释收益曲线。' : '先完成时点、股票池和成交约束，再看收益率。';
     }}
-    refreshDeadlines();
-    setInterval(refreshDeadlines, 60000);
+    checks.forEach(input => input.addEventListener('change', updateAudit));
   </script>
 </body>
 </html>
@@ -363,6 +281,8 @@ def render_dashboard(score: dict[str, Any], questions: list[dict[str, Any]]) -> 
 def build_site(
     score: dict[str, Any],
     questions: list[dict[str, Any]],
+    tracks: list[dict[str, Any]],
+    sources: list[dict[str, Any]],
     output: str | Path,
     image_path: str | Path,
 ) -> None:
@@ -371,14 +291,20 @@ def build_site(
     data = destination / "data"
     assets.mkdir(parents=True, exist_ok=True)
     data.mkdir(parents=True, exist_ok=True)
-    (destination / "index.html").write_text(render_dashboard(score, questions), encoding="utf-8")
-    shutil.copyfile(image_path, assets / "open-market-eval-hero.png")
-    (data / "smoke-scorecard.json").write_text(
-        json.dumps(score, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    (destination / "index.html").write_text(
+        render_dashboard(score, questions, tracks, sources), encoding="utf-8"
     )
-    (data / "research-references.json").write_text(
-        json.dumps(RESEARCH_REFERENCES, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    shutil.copyfile(image_path, assets / "a-share-agent-lab.png")
+    for name, value in (
+        ("smoke-scorecard.json", score),
+        ("a-share-tracks.json", tracks),
+        ("source-registry.json", sources),
+        ("method-references.json", METHOD_REFERENCES),
+    ):
+        (data / name).write_text(
+            json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     with (data / "live-questions.jsonl").open("w", encoding="utf-8", newline="\n") as handle:
         for question in questions:
             handle.write(json.dumps(question, sort_keys=True) + "\n")

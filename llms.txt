@@ -1,6 +1,6 @@
-# OpenMarketEval
+# OpenMarketEval A-Share Agent Lab
 
-> Auditable evaluation harness for AI market and major-event forecasting.
+> Public evaluation lab for A-share filing search, point-in-time QA, event forecasting, backtest audits, and evidence-linked research memos.
 
 ## Entry points
 
@@ -9,6 +9,9 @@
 - Forecast protocol: docs/protocol.md
 - Benchmark design: docs/benchmark-design.md
 - Roadmap: docs/roadmap.md
+- A-share track catalog: benchmarks/a-share-lab/tracks.json
+- Public source registry: benchmarks/a-share-lab/sources.json
+- A-share lab specification: benchmarks/a-share-lab/README.md
 - Live dashboard: https://alfonsobang.github.io/open-market-eval/
 - Current live round: live/rounds/2026-08/
 - Contributor rules: CONTRIBUTING.md
@@ -22,7 +25,9 @@
 - Seal: `python -m open_market_eval seal <files...>`
 - Score: `python -m open_market_eval score --forecasts <jsonl> --resolutions <jsonl>`
 - Build dashboard: `python -m open_market_eval build-site --output site`
+- List A-share tracks: `python -m open_market_eval list-tracks`
+- Inspect one track: `python -m open_market_eval show-track --track backtest-audit`
 
 ## Safety boundary
 
-Evaluate probabilistic research quality. Do not provide trade execution, investment recommendations, price targets, or guaranteed-return claims.
+Evaluate research process and probabilistic quality. Do not provide trade execution, investment recommendations, price targets, or guaranteed-return claims. Public A-share performance has not yet been published.

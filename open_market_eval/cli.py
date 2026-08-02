@@ -67,6 +67,15 @@ def verify_live_submissions(rounds_root: Path) -> int:
     return count
 
 
+def load_a_share_tracks(root: Path | None = None) -> list[dict]:
+    project_root = root or Path(__file__).resolve().parents[1]
+    path = project_root / "benchmarks" / "a-share-lab" / "tracks.json"
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, list) or not value:
+        raise ValueError("A-share track catalog must be a non-empty list")
+    return value
+
+
 def command_demo(output: Path) -> None:
     source = Path(__file__).resolve().parents[1] / "benchmarks" / "synthetic-smoke"
     output.mkdir(parents=True, exist_ok=True)
@@ -123,6 +132,9 @@ def build_parser() -> argparse.ArgumentParser:
         "verify-live", help="validate every committed live-round submission and seal"
     )
     verify_live.add_argument("--root", default="live/rounds", type=Path)
+    subparsers.add_parser("list-tracks", help="list A-share Agent Lab evaluation tracks")
+    track = subparsers.add_parser("show-track", help="print one A-share track specification")
+    track.add_argument("--track", required=True)
     website = subparsers.add_parser("build-site", help="build the static public dashboard")
     website.add_argument("--output", default="site", type=Path)
     website.add_argument(
@@ -174,6 +186,14 @@ def main(argv: list[str] | None = None) -> int:
         elif args.action == "verify-live":
             count = verify_live_submissions(args.root)
             print(f"Verified {count} live submission(s)")
+        elif args.action == "list-tracks":
+            for track in load_a_share_tracks():
+                print(f"{track['id']:<20} {track['status']:<8} {track['name_zh']} / {track['name_en']}")
+        elif args.action == "show-track":
+            tracks = {track["id"]: track for track in load_a_share_tracks()}
+            if args.track not in tracks:
+                raise ValueError(f"unknown A-share track: {args.track}")
+            print(json.dumps(tracks[args.track], ensure_ascii=False, indent=2, sort_keys=True))
         elif args.action == "build-site":
             root = Path(__file__).resolve().parents[1]
             smoke = root / "benchmarks" / "synthetic-smoke"
@@ -187,8 +207,10 @@ def main(argv: list[str] | None = None) -> int:
             build_site(
                 result,
                 read_jsonl(questions_path),
+                load_a_share_tracks(root),
+                json.loads((root / "benchmarks" / "a-share-lab" / "sources.json").read_text(encoding="utf-8")),
                 args.output,
-                root / "docs" / "assets" / "open-market-eval-hero.png",
+                root / "docs" / "assets" / "a-share-agent-lab.png",
             )
             print(f"Site: {args.output / 'index.html'}")
     except (OSError, ValueError, RuntimeError) as exc:

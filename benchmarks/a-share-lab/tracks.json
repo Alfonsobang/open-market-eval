@@ -1,0 +1,72 @@
+[
+  {
+    "id": "filing-search",
+    "name_zh": "公告搜索",
+    "name_en": "Filing search",
+    "status": "pilot",
+    "question": "在给定信息截止时间前，从官方披露中找到能回答公司事件问题的最早、最直接证据。",
+    "user_value": "检验 Agent 是真正找到原始公告，还是引用搜索摘要、媒体转述或事后材料。",
+    "input": "公司、事件问题、信息截止时间、允许访问的公开站点",
+    "deliverable": "evidence_bundle.json：公告 URL、标题、发布日期、命中段落和检索轨迹",
+    "metrics": ["Recall@5", "官方来源命中率", "时间边界合规率", "引用精确率"],
+    "failure_modes": ["只引用聚合站", "使用截止时间后的公告", "同名公司混淆", "命中但无法支持结论"],
+    "sources": ["cninfo", "sse", "szse"],
+    "sample_task": "找出某公司首次正式披露股份回购上限的公告，并给出信息截止日前可见的原文证据。"
+  },
+  {
+    "id": "point-in-time-qa",
+    "name_zh": "时点查数",
+    "name_en": "Point-in-time fact QA",
+    "status": "spec",
+    "question": "从指定版本的定期报告中提取财务数字，并正确处理期间、口径、单位与更正公告。",
+    "user_value": "解决 AI 查数最常见的年份错位、单位错位、合并口径错位和未来修订泄漏。",
+    "input": "证券代码、报告期、字段、as-of 时间和指定报告版本",
+    "deliverable": "fact_answer.json：数值、单位、期间、合并口径、表名、页码和来源",
+    "metrics": ["数值完全匹配", "单位归一化", "期间一致性", "来源定位准确率"],
+    "failure_modes": ["万元与元混淆", "单季与累计混淆", "母公司与合并口径混淆", "引用后续更正版"],
+    "sources": ["cninfo", "sse", "szse"],
+    "sample_task": "截至年报首次披露日，提取合同负债期末余额，返回原始单位、归一化数值和页码。"
+  },
+  {
+    "id": "event-forecast",
+    "name_zh": "事件预测",
+    "name_en": "Event forecasting",
+    "status": "live",
+    "question": "在结果公布前，对可客观结算的公司、政策或宏观事件给出概率，并公开封存。",
+    "user_value": "把模糊观点变成可以事后结算的概率记录，保留命中也保留失误。",
+    "input": "二元事件、截止时间、结算规则、公开证据和 Agent 轨迹",
+    "deliverable": "forecasts.jsonl + seal.json + resolution.jsonl",
+    "metrics": ["Brier score", "Log loss", "校准误差", "相对基线 skill"],
+    "failure_modes": ["事件定义含糊", "结果后修改概率", "只展示成功案例", "把方向正确当成校准良好"],
+    "sources": ["cninfo", "sse", "szse", "csrc"],
+    "sample_task": "在正式公告前，预测公司是否会在指定期限内完成可验证的资产重组节点。"
+  },
+  {
+    "id": "backtest-audit",
+    "name_zh": "回测审计",
+    "name_en": "Backtest audit",
+    "status": "spec",
+    "question": "审查一个 A 股策略是否存在未来函数、幸存者偏差、不可成交价格或成本遗漏。",
+    "user_value": "让非专业用户先证明回测没有作弊，再讨论收益曲线是否好看。",
+    "input": "策略代码、数据快照、股票池构造、信号时点、成交规则和成本参数",
+    "deliverable": "audit_report.json：逐项证据、严重级别、复现步骤和修复建议",
+    "metrics": ["缺陷检出率", "误报率", "修复后复现率", "成本敏感性覆盖"],
+    "failure_modes": ["用今日成分股回测历史", "复权价直接成交", "忽略涨跌停与停牌", "信号日收盘价成交"],
+    "sources": ["sse", "szse", "csindex", "akshare", "qlib"],
+    "sample_task": "检查给定 notebook 是否正确处理 T+1、退市股票、ST 状态、停牌、涨跌停和双边交易成本。"
+  },
+  {
+    "id": "research-memo",
+    "name_zh": "研究备忘录",
+    "name_en": "Research memo",
+    "status": "planned",
+    "question": "把公告、财务数据和反方证据组织成可审计的研究结论，而不是生成流畅但不可核验的长文。",
+    "user_value": "帮助研究员检查每个关键判断是否有证据、是否过期、是否遗漏反例。",
+    "input": "研究问题、as-of 时间、证据包、事实表和输出模板",
+    "deliverable": "memo.md + claim_graph.json：主张、证据、反证、未知项和失效条件",
+    "metrics": ["关键主张覆盖率", "证据可追溯率", "反证召回率", "未知项披露率"],
+    "failure_modes": ["把相关性写成因果", "没有反方证据", "预测与事实混写", "用语言质量掩盖证据缺口"],
+    "sources": ["cninfo", "sse", "szse", "csrc"],
+    "sample_task": "基于指定日期前的公开材料，形成包含多空证据、未知项和失效条件的一页研究备忘录。"
+  }
+]

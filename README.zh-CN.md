@@ -5,15 +5,32 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
 
-**一个 AI 能否在市场重大事件发生前给出 70% 的概率，证明当时掌握了哪些信息，并在 100 次预测后仍然保持良好校准？**
+**一个 AI 能否基于公开披露研究 A 股，查对时点数据，通过回测防泄漏审计，并给出长期保持校准的事件概率？**
 
-OpenMarketEval 是面向**股市与重大事件预测 Agent** 的开放评测框架。它把预测变成带时间戳、可核查证据的研究产物，在结果揭晓前完成封存，并在事件结束后结算和评分，命中与失误都会保留。
+OpenMarketEval 正在建设一个公开的 **A 股研究 Agent 实验场**，覆盖五类真实工作：公告搜索、时点查数、事件预测、回测审计和证据化研究备忘录。
 
-你可以通过一个文件协议接入任意模型或研究 Agent，以 Pull Request 提交预测，并在官方结果发布后比较校准表现。
+它服务两类用户：需要规范研究流程但基础并不完整的 A 股研究者，以及想验证 AI 投研能力、又不愿被流畅回答和漂亮回测误导的实践者。
 
-[实时看板](https://alfonsobang.github.io/open-market-eval/) | [开放预测轮次](live/rounds/2026-08/README.md) | [English](README.md) | [预测协议](docs/protocol.md) | [路线图](docs/roadmap.md)
+[A 股实验场](https://alfonsobang.github.io/open-market-eval/) | [五轨任务规格](benchmarks/a-share-lab/README.md) | [English](README.md) | [开放预测轮次](live/rounds/2026-08/README.md) | [路线图](docs/roadmap.md)
 
-![OpenMarketEval 生命周期](docs/assets/open-market-eval-social-preview.png)
+![A 股研究 Agent 五轨实验流程](docs/assets/a-share-agent-lab.png)
+
+## A 股研究 Agent 实验场
+
+| 轨道 | 验证什么 | 标准交付物 |
+| --- | --- | --- |
+| 公告搜索 | 是否找到截止时间前的一手正式披露 | `evidence_bundle.json` |
+| 时点查数 | 数值、期间、单位、口径和报告版本是否正确 | `fact_answer.json` |
+| 事件预测 | 是否在结果前封存概率并接受事后结算 | `forecasts.jsonl` + `seal.json` |
+| 回测审计 | 未来函数、幸存者偏差、成交和成本错误 | `audit_report.json` |
+| 研究备忘录 | 主张能否连接证据、反证、未知项与失效条件 | `memo.md` + `claim_graph.json` |
+
+```bash
+python -m open_market_eval list-tracks
+python -m open_market_eval show-track --track backtest-audit
+```
+
+五轨目录和公共来源注册表位于 [`benchmarks/a-share-lab`](benchmarks/a-share-lab/)，均可机器读取。当前发布的是规格与首批试验入口，尚未声称任何 A 股模型排名或投资业绩。
 
 ## 一分钟运行
 

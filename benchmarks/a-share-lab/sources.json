@@ -1,0 +1,74 @@
+[
+  {
+    "id": "cninfo",
+    "name": "巨潮资讯网",
+    "kind": "官方披露",
+    "authority": "primary",
+    "url": "https://www.cninfo.com.cn/",
+    "use_for": "深沪京上市公司公告、定期报告与互动信息",
+    "caution": "保存公告时间、PDF 原件和版本；不要把搜索摘要当成原文证据。"
+  },
+  {
+    "id": "sse",
+    "name": "上海证券交易所",
+    "kind": "交易所",
+    "authority": "primary",
+    "url": "https://www.sse.com.cn/disclosure/listedinfo/announcement/",
+    "use_for": "沪市上市公司公告、监管信息和交易规则",
+    "caution": "任务必须记录查询截止时间，并区分公司公告与交易所公告。"
+  },
+  {
+    "id": "szse",
+    "name": "深圳证券交易所",
+    "kind": "交易所",
+    "authority": "primary",
+    "url": "https://www.szse.cn/disclosure/notice/company/index.html",
+    "use_for": "深市上市公司公告、监管动态和业务规则",
+    "caution": "保留原始发布日期与证券代码，避免公司简称变更造成错配。"
+  },
+  {
+    "id": "csrc",
+    "name": "中国证监会",
+    "kind": "监管机构",
+    "authority": "primary",
+    "url": "https://www.csrc.gov.cn/",
+    "use_for": "监管规则、行政许可、处罚与政策事件结算",
+    "caution": "区分征求意见稿、正式规则和实施日期。"
+  },
+  {
+    "id": "csindex",
+    "name": "中证指数有限公司",
+    "kind": "指数机构",
+    "authority": "primary",
+    "url": "https://www.csindex.com.cn/",
+    "use_for": "指数规则、样本调整和历史股票池审计",
+    "caution": "不能用当前成分股替代历史时点成分股。"
+  },
+  {
+    "id": "akshare",
+    "name": "AKShare",
+    "kind": "开源数据接口",
+    "authority": "secondary",
+    "url": "https://github.com/akfamily/akshare",
+    "use_for": "公开数据接入、原型实验和交叉验证",
+    "caution": "接口可能随目标站点变化；固定版本、缓存原始响应并核对数据权利。"
+  },
+  {
+    "id": "qlib",
+    "name": "Microsoft Qlib",
+    "kind": "研究框架",
+    "authority": "tool",
+    "url": "https://github.com/microsoft/qlib",
+    "use_for": "数据工作流、模型训练、预测和量化研究实验",
+    "caution": "框架能力不等于数据时点安全；股票池和成交模型仍需单独审计。"
+  },
+  {
+    "id": "harbor",
+    "name": "Harbor",
+    "kind": "Agent 评测框架",
+    "authority": "tool",
+    "url": "https://github.com/harbor-framework/harbor",
+    "use_for": "容器化任务、Agent 轨迹、重复试验和程序化 verifier",
+    "caution": "金融任务仍需自行定义时点数据、结算规则和防泄漏测试。"
+  }
+]

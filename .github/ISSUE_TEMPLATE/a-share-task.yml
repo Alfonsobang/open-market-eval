@@ -1,0 +1,54 @@
+name: Propose an A-share evaluation task
+description: Submit a public, time-safe task for the A-Share Agent Lab.
+title: "[A-share task]: "
+labels: ["a-share-lab", "task-proposal"]
+body:
+  - type: dropdown
+    id: track
+    attributes:
+      label: Evaluation track
+      options:
+        - Filing search
+        - Point-in-time fact QA
+        - Event forecasting
+        - Backtest audit
+        - Research memo
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: Task statement
+      description: Define the exact research question and expected output.
+    validations:
+      required: true
+  - type: input
+    id: cutoff
+    attributes:
+      label: Information cutoff
+      placeholder: 2025-04-30T15:00:00+08:00
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Public primary sources
+      description: Link official filings, exchange pages, regulator documents, or redistributable fixtures.
+    validations:
+      required: true
+  - type: textarea
+    id: verifier
+    attributes:
+      label: Verification method
+      description: Explain how the output can be scored programmatically or independently reviewed.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Contribution checks
+      options:
+        - label: The task uses no private data, real user data, subscription-only corpus, or proprietary workflow.
+          required: true
+        - label: The task is not a stock recommendation, price target, or performance claim.
+          required: true
