@@ -23,17 +23,21 @@ class SiteTests(unittest.TestCase):
                 score,
                 questions,
                 directory,
-                ROOT / "docs" / "assets" / "open-market-eval-social-preview.png",
+                ROOT / "docs" / "assets" / "open-market-eval-hero.png",
             )
             index = (Path(directory) / "index.html").read_text(encoding="utf-8")
-            self.assertIn("Forecast before the event", index)
+            self.assertIn("Forecast the event. Audit the agent.", index)
             self.assertIn("Synthetic fixture", index)
             self.assertIn("Nothing here is investment advice", index)
+            self.assertIn("ForecastBench-Sim", index)
+            self.assertIn("Harbor", index)
+            self.assertIn("technical lineage, not as endorsements", index)
             self.assertEqual(index.count('class="live-question"'), 6)
             self.assertTrue((Path(directory) / "data" / "live-questions.jsonl").exists())
             self.assertTrue(
-                (Path(directory) / "assets" / "open-market-eval-social-preview.png").exists()
+                (Path(directory) / "assets" / "open-market-eval-hero.png").exists()
             )
+            self.assertTrue((Path(directory) / "data" / "research-references.json").exists())
 
 
 if __name__ == "__main__":

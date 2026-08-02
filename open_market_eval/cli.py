@@ -188,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
                 result,
                 read_jsonl(questions_path),
                 args.output,
-                root / "docs" / "assets" / "open-market-eval-social-preview.png",
+                root / "docs" / "assets" / "open-market-eval-hero.png",
             )
             print(f"Site: {args.output / 'index.html'}")
     except (OSError, ValueError, RuntimeError) as exc:
