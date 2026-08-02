@@ -31,3 +31,5 @@ python -m open_market_eval demo --output runs/demo
 For a benchmark or scoring change, explain what failure mode it catches and provide a minimal fixture. Maintainers may decline large generated dumps, promotional content, unverifiable forecasts, or datasets with unclear rights.
 
 For a live-round forecast, follow the round README. The GitHub commit must predate the question close time, and the submitted seal must match the forecast file. Late entries cannot receive L2 status.
+
+Store live entries at `live/rounds/<round>/submissions/<github-handle>/`. Do not edit another participant's files. The `prepare-submission` command creates the required files, and `python -m open_market_eval verify-live` runs the same integrity check as CI.

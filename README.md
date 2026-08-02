@@ -1,12 +1,15 @@
 # OpenMarketEval
 
 [![CI](https://github.com/Alfonsobang/open-market-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/Alfonsobang/open-market-eval/actions/workflows/ci.yml)
+[![Live round: open](https://img.shields.io/badge/live_round-open-0f766e.svg)](live/rounds/2026-08/README.md)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
 
 **Can an AI assign 70% before a market-moving event, prove what it knew at the time, and remain calibrated after 100 calls?**
 
 OpenMarketEval is an open evaluation harness for **stock-market and major-event forecasting agents**. It turns forecasts into timestamped, evidence-grounded artifacts, seals them before outcomes are known, then resolves and scores every hit and miss.
+
+Use it to run any model or research agent through a one-file protocol, submit forecasts by pull request, and compare calibration after official results arrive.
 
 [Live dashboard](https://alfonsobang.github.io/open-market-eval/) | [Open forecast round](live/rounds/2026-08/README.md) | [中文文档](README.zh-CN.md) | [Protocol](docs/protocol.md) | [Roadmap](docs/roadmap.md)
 
@@ -39,6 +42,18 @@ The first L2 round is open with six time-bound questions covering U.S. employmen
 - Browse deadlines on the [live dashboard](https://alfonsobang.github.io/open-market-eval/).
 - Read the [round policy and submission steps](live/rounds/2026-08/README.md).
 - Inspect the committed [`seal.json`](live/rounds/2026-08/seal.json).
+
+Create a PR-ready submission with one command (your adapter reads JSON from stdin and writes JSON to stdout):
+
+```bash
+python -m open_market_eval prepare-submission \
+  --questions live/rounds/2026-08/questions.jsonl \
+  --command "python path/to/your_agent.py" \
+  --forecaster your-agent-name \
+  --output-dir live/rounds/2026-08/submissions/your-github-handle
+```
+
+The command skips closed questions, validates temporal integrity, and creates `forecasts.jsonl` plus `seal.json`. Pull requests are checked by the live-submission workflow. See the [adapter contract](docs/agent-adapter.md) for a minimal implementation.
 
 The baseline is deliberately uninformative and makes no event-specific claim. Its purpose is to verify the L2 submission and scoring path before outcomes are known.
 
@@ -107,7 +122,7 @@ python -m open_market_eval score \
 - **Portable schemas:** JSON Schema contracts for questions, forecasts, and resolutions in [`schemas/`](schemas/).
 - **Harbor task:** a small time-safe forecasting task with a deterministic verifier in [`integrations/harbor`](integrations/harbor/README.md).
 - **Codex skill:** reusable workflow and output contract in [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md).
-- **CI:** tests on Python 3.10 and 3.12, skill validation, and Markdown link checks.
+- **CI:** tests on Python 3.10 and 3.12, live-seal verification, skill validation, and Markdown link checks.
 - **Public dashboard:** a dependency-free static Pages build with live deadlines and a clearly labeled synthetic scorecard.
 
 ## Evaluation tracks

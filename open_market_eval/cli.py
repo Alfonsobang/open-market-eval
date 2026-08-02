@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .harness import run_agent
 from .io import read_jsonl, write_json, write_jsonl
-from .ledger import seal_files
+from .ledger import seal_files, verify_seal
 from .report import render_markdown
 from .scoring import score_forecasts
 from .site import build_site
-from .validation import validate_forecast, validate_question, validate_resolution
+from .validation import parse_time, validate_forecast, validate_question, validate_resolution
 
 
 def _indexed(rows: list[dict], name: str) -> dict[str, dict]:
@@ -42,6 +44,27 @@ def validate_bundle(questions_path: str, forecasts_path: str, resolutions_path: 
             if question is None:
                 raise ValueError(f"unknown resolution question_id: {resolution.get('question_id')}")
             validate_resolution(resolution, question)
+
+
+def verify_live_submissions(rounds_root: Path) -> int:
+    count = 0
+    submission_dirs = sorted(
+        path for path in rounds_root.glob("*/submissions/*") if path.is_dir()
+    )
+    for submission_dir in submission_dirs:
+        round_root = submission_dir.parents[1]
+        questions_path = round_root / "questions.jsonl"
+        forecasts_path = submission_dir / "forecasts.jsonl"
+        seal_path = submission_dir / "seal.json"
+        if not questions_path.exists() or not forecasts_path.exists() or not seal_path.exists():
+            raise ValueError(f"incomplete submission: {submission_dir}")
+        validate_bundle(str(questions_path), str(forecasts_path), None)
+        verify_seal(
+            json.loads(seal_path.read_text(encoding="utf-8")),
+            [questions_path, forecasts_path],
+        )
+        count += 1
+    return count
 
 
 def command_demo(output: Path) -> None:
@@ -89,6 +112,17 @@ def build_parser() -> argparse.ArgumentParser:
     agent.add_argument("--command", required=True)
     agent.add_argument("--forecaster", required=True)
     agent.add_argument("--output", default="forecasts.jsonl")
+    submission = subparsers.add_parser(
+        "prepare-submission", help="run an agent and create a validated, sealed live submission"
+    )
+    submission.add_argument("--questions", required=True)
+    submission.add_argument("--command", required=True)
+    submission.add_argument("--forecaster", required=True)
+    submission.add_argument("--output-dir", required=True, type=Path)
+    verify_live = subparsers.add_parser(
+        "verify-live", help="validate every committed live-round submission and seal"
+    )
+    verify_live.add_argument("--root", default="live/rounds", type=Path)
     website = subparsers.add_parser("build-site", help="build the static public dashboard")
     website.add_argument("--output", default="site", type=Path)
     website.add_argument(
@@ -118,6 +152,28 @@ def main(argv: list[str] | None = None) -> int:
             forecasts = run_agent(args.command, read_jsonl(args.questions), args.forecaster)
             write_jsonl(args.output, forecasts)
             print(f"Wrote {len(forecasts)} forecasts to {args.output}")
+        elif args.action == "prepare-submission":
+            args.output_dir.mkdir(parents=True, exist_ok=True)
+            forecasts_path = args.output_dir / "forecasts.jsonl"
+            now = datetime.now(timezone.utc)
+            questions = [
+                question
+                for question in read_jsonl(args.questions)
+                if parse_time(question["close_time"], "close_time") >= now
+            ]
+            if not questions:
+                raise ValueError("no open questions remain in this round")
+            forecasts = run_agent(args.command, questions, args.forecaster)
+            write_jsonl(forecasts_path, forecasts)
+            validate_bundle(args.questions, str(forecasts_path), None)
+            manifest = seal_files([args.questions, forecasts_path])
+            write_json(args.output_dir / "seal.json", manifest)
+            print(f"Validated and sealed {len(forecasts)} forecasts")
+            print(f"Submission: {args.output_dir}")
+            print(f"Seal: {manifest['combined_sha256']}")
+        elif args.action == "verify-live":
+            count = verify_live_submissions(args.root)
+            print(f"Verified {count} live submission(s)")
         elif args.action == "build-site":
             root = Path(__file__).resolve().parents[1]
             smoke = root / "benchmarks" / "synthetic-smoke"

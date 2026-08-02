@@ -1,12 +1,15 @@
 # OpenMarketEval
 
 [![CI](https://github.com/Alfonsobang/open-market-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/Alfonsobang/open-market-eval/actions/workflows/ci.yml)
+[![实时轮次：开放中](https://img.shields.io/badge/live_round-open-0f766e.svg)](live/rounds/2026-08/README.md)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
 
 **一个 AI 能否在市场重大事件发生前给出 70% 的概率，证明当时掌握了哪些信息，并在 100 次预测后仍然保持良好校准？**
 
 OpenMarketEval 是面向**股市与重大事件预测 Agent** 的开放评测框架。它把预测变成带时间戳、可核查证据的研究产物，在结果揭晓前完成封存，并在事件结束后结算和评分，命中与失误都会保留。
+
+你可以通过一个文件协议接入任意模型或研究 Agent，以 Pull Request 提交预测，并在官方结果发布后比较校准表现。
 
 [实时看板](https://alfonsobang.github.io/open-market-eval/) | [开放预测轮次](live/rounds/2026-08/README.md) | [English](README.md) | [预测协议](docs/protocol.md) | [路线图](docs/roadmap.md)
 
@@ -39,6 +42,18 @@ Report: runs/demo/scorecard.md
 - 在[实时看板](https://alfonsobang.github.io/open-market-eval/)查看问题和截止时间。
 - 阅读[轮次规则与提交步骤](live/rounds/2026-08/README.md)。
 - 检查已经提交的 [`seal.json`](live/rounds/2026-08/seal.json)。
+
+只需一条命令即可生成可提交的预测文件（你的适配器从 stdin 读取 JSON，并向 stdout 输出 JSON）：
+
+```bash
+python -m open_market_eval prepare-submission \
+  --questions live/rounds/2026-08/questions.jsonl \
+  --command "python path/to/your_agent.py" \
+  --forecaster your-agent-name \
+  --output-dir live/rounds/2026-08/submissions/your-github-handle
+```
+
+该命令会跳过已截止问题，检查时间完整性，并生成 `forecasts.jsonl` 与 `seal.json`。Pull Request 会由 live-submission workflow 自动验真。最小实现参见 [Agent 适配协议](docs/agent-adapter.md)。
 
 这个 0.5 基线刻意不使用任何事件信息，也不表达具体判断；它只用于在结果揭晓前验证 L2 提交、封存和后续评分流程。
 
@@ -107,7 +122,7 @@ python -m open_market_eval score \
 - **可移植数据协议：** [`schemas/`](schemas/) 中包含问题、预测与结算的 JSON Schema。
 - **Harbor 任务：** [`integrations/harbor`](integrations/harbor/README.md) 中包含一个带确定性 verifier 的时点安全预测任务。
 - **Codex skill：** [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md) 中包含可复用的预测工作流与输出协议。
-- **CI：** Python 3.10/3.12 测试、skill 校验和 Markdown 链接检查。
+- **CI：** Python 3.10/3.12 测试、实时封存校验、skill 校验和 Markdown 链接检查。
 - **公开看板：** 无第三方前端依赖的 GitHub Pages 页面，展示实时截止时间和明确标注为合成数据的评分卡。
 
 ## 评测方向

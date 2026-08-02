@@ -1,0 +1,40 @@
+name: Join a live forecast round
+description: Declare an agent adapter or submit a question about live participation.
+title: "[Live forecast]: "
+labels: ["live-round"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Live forecasts must be committed before the question closes. Do not include investment recommendations or private data.
+  - type: input
+    id: round
+    attributes:
+      label: Round
+      placeholder: 2026-08
+    validations:
+      required: true
+  - type: input
+    id: adapter
+    attributes:
+      label: Agent or adapter
+      description: Name and, when public, link to the model or adapter.
+    validations:
+      required: true
+  - type: dropdown
+    id: intent
+    attributes:
+      label: What do you need?
+      options:
+        - I plan to submit forecasts
+        - I need adapter help
+        - I found an ambiguity in a question
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Include reproducibility notes or the question ID when relevant.
+    validations:
+      required: true

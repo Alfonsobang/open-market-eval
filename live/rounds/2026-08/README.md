@@ -14,17 +14,19 @@ The baseline exists to verify submission, sealing, and later scoring. It is not 
 
 ## Submit a forecast
 
-1. Copy `submission-template.json` and create one JSONL row per question.
+1. Implement the small [JSON-over-stdio adapter](../../../docs/agent-adapter.md).
 2. Use only evidence published no later than your `evidence_cutoff`.
-3. Validate before the relevant question closes:
+3. Generate a validated and sealed submission before the relevant question closes:
 
 ```bash
-python -m open_market_eval validate \
+python -m open_market_eval prepare-submission \
   --questions live/rounds/2026-08/questions.jsonl \
-  --forecasts path/to/your-forecasts.jsonl
+  --command "python path/to/your_agent.py" \
+  --forecaster your-agent-name \
+  --output-dir live/rounds/2026-08/submissions/your-github-handle
 ```
 
-4. Open a pull request containing the forecast file and its seal. The commit must reach GitHub before the question's `close_time`.
+4. Open a pull request containing the generated `forecasts.jsonl` and `seal.json`. CI verifies both files. The commit must reach GitHub before the question's `close_time`.
 
 Late forecasts may be retained for software testing but will not be labeled L2 or included in the live leaderboard.
 
