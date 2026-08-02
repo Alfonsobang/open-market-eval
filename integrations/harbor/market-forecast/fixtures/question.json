@@ -1,0 +1,19 @@
+{
+  "id": "harbor-synthetic-earnings-event",
+  "title": "Will synthetic company ACME exceed its revenue threshold?",
+  "evidence_cutoff": "2025-03-09T12:00:00Z",
+  "close_time": "2025-03-10T16:00:00Z",
+  "resolution_criteria": "Resolve YES if fixture revenue exceeds 100 units.",
+  "evidence": [
+    {
+      "url": "fixture://channel-check-8",
+      "published_at": "2025-03-08T08:00:00Z",
+      "text": "Channel activity is moderately above the prior period."
+    },
+    {
+      "url": "fixture://outcome-leak",
+      "published_at": "2025-03-11T08:00:00Z",
+      "text": "This post-cutoff row must not be used."
+    }
+  ]
+}

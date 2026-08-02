@@ -1,0 +1,14 @@
+{
+  "question_id": "harbor-synthetic-earnings-event",
+  "probability": 0.6,
+  "evidence_cutoff": "2025-03-09T12:00:00Z",
+  "thesis": "The permitted channel check modestly favors an upside outcome.",
+  "evidence": [
+    {
+      "url": "fixture://channel-check-8",
+      "published_at": "2025-03-08T08:00:00Z"
+    }
+  ],
+  "falsifiers": ["A reversal in channel activity before close"],
+  "not_investment_advice": true
+}

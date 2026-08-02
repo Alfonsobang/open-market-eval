@@ -1,0 +1,31 @@
+name: Add a forecast question
+description: Propose a resolvable, time-safe market-event question
+title: "[Question]: "
+labels: ["benchmark", "question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Binary question
+      description: Include the subject, threshold, and deadline.
+    validations:
+      required: true
+  - type: input
+    id: close
+    attributes:
+      label: Close time
+      placeholder: 2026-09-01T16:00:00Z
+    validations:
+      required: true
+  - type: textarea
+    id: resolution
+    attributes:
+      label: Resolution rule and public sources
+    validations:
+      required: true
+  - type: textarea
+    id: rights
+    attributes:
+      label: Data rights and temporal-integrity notes
+    validations:
+      required: true

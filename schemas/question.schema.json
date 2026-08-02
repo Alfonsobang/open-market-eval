@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Alfonsobang/open-market-eval/schemas/question.schema.json",
+  "title": "OpenMarketEval binary question",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "title", "close_time", "resolve_by", "resolution_criteria", "resolution_sources", "tags"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "close_time": {"type": "string", "format": "date-time"},
+    "resolve_by": {"type": "string", "format": "date-time"},
+    "resolution_criteria": {"type": "string", "minLength": 1},
+    "resolution_sources": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "tags": {"type": "array", "items": {"type": "string"}}
+  }
+}

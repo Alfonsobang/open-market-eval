@@ -1,0 +1,23 @@
+name: Agent or harness adapter
+description: Propose an adapter for a forecasting agent or evaluation runtime
+title: "[Adapter]: "
+labels: ["adapter"]
+body:
+  - type: input
+    id: project
+    attributes:
+      label: Project or runtime
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Input/output contract
+    validations:
+      required: true
+  - type: textarea
+    id: test
+    attributes:
+      label: Deterministic test plan
+    validations:
+      required: true

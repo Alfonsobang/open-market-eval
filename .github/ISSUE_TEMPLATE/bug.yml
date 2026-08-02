@@ -1,0 +1,18 @@
+name: Bug report
+description: Report a reproducible validation, scoring, or harness problem
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Include the command, minimal public-safe fixture, and observed output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true

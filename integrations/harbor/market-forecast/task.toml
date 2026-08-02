@@ -1,0 +1,36 @@
+schema_version = "1.2"
+
+artifacts = ["/logs/artifacts/forecast.json"]
+
+[task]
+name = "open-market-eval/time-safe-market-forecast"
+description = "Produce a schema-valid probabilistic forecast without using post-cutoff evidence."
+authors = []
+keywords = ["finance", "forecasting", "calibration", "temporal-integrity"]
+
+[metadata]
+difficulty = "medium"
+category = "market-event-forecasting"
+tags = ["finance", "agent-evaluation", "hindsight-leakage"]
+
+[verifier]
+timeout_sec = 120.0
+
+[agent]
+timeout_sec = 300.0
+
+[environment]
+build_timeout_sec = 600.0
+docker_image = "python:3.12-slim"
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+gpus = 0
+allow_internet = false
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

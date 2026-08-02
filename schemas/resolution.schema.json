@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Alfonsobang/open-market-eval/schemas/resolution.schema.json",
+  "title": "OpenMarketEval binary resolution",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["question_id", "outcome", "resolved_at", "source_url", "rationale"],
+  "properties": {
+    "question_id": {"type": "string", "minLength": 1},
+    "outcome": {"type": "integer", "enum": [0, 1]},
+    "resolved_at": {"type": "string", "format": "date-time"},
+    "source_url": {"type": "string"},
+    "rationale": {"type": "string", "minLength": 1}
+  }
+}

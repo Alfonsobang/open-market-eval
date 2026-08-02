@@ -1,0 +1,25 @@
+# OpenMarketEval
+
+> Auditable evaluation harness for AI market and major-event forecasting.
+
+## Entry points
+
+- README: README.md
+- Chinese README: README.zh-CN.md
+- Forecast protocol: docs/protocol.md
+- Benchmark design: docs/benchmark-design.md
+- Roadmap: docs/roadmap.md
+- Contributor rules: CONTRIBUTING.md
+- Agent skill: skills/forecast-market-events/SKILL.md
+- Harbor-style task: integrations/harbor/market-forecast/
+
+## Commands
+
+- Demo: `python -m open_market_eval demo`
+- Validate: `python -m open_market_eval validate --questions <jsonl> --forecasts <jsonl>`
+- Seal: `python -m open_market_eval seal <files...>`
+- Score: `python -m open_market_eval score --forecasts <jsonl> --resolutions <jsonl>`
+
+## Safety boundary
+
+Evaluate probabilistic research quality. Do not provide trade execution, investment recommendations, price targets, or guaranteed-return claims.

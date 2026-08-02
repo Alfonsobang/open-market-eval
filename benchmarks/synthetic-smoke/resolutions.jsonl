@@ -1,0 +1,6 @@
+{"outcome":1,"question_id":"smoke-equity-index","rationale":"The fixture close is 5112.","resolved_at":"2025-01-11T12:00:00Z","source_url":"fixture://synthetic-market-tape"}
+{"outcome":0,"question_id":"smoke-rate-decision","rationale":"The synthetic committee held the policy rate.","resolved_at":"2025-02-11T12:00:00Z","source_url":"fixture://synthetic-policy-release"}
+{"outcome":1,"question_id":"smoke-earnings-beat","rationale":"Synthetic revenue exceeded the fixture consensus.","resolved_at":"2025-03-11T12:00:00Z","source_url":"fixture://synthetic-earnings-release"}
+{"outcome":0,"question_id":"smoke-regulatory-approval","rationale":"No final approval was granted by the deadline.","resolved_at":"2025-04-19T12:00:00Z","source_url":"fixture://synthetic-regulator-docket"}
+{"outcome":1,"question_id":"smoke-supply-disruption","rationale":"The fixture records a four-day halt.","resolved_at":"2025-05-19T12:00:00Z","source_url":"fixture://synthetic-supply-log"}
+{"outcome":0,"question_id":"smoke-geopolitical-event","rationale":"No signed framework was published by the deadline.","resolved_at":"2025-06-19T12:00:00Z","source_url":"fixture://synthetic-joint-statement"}

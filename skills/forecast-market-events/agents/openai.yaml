@@ -1,0 +1,4 @@
+interface:
+  display_name: "Forecast Market Events"
+  short_description: "Create auditable market-event forecasts"
+  default_prompt: "Research a market event, produce a time-safe probabilistic forecast, and prepare it for OpenMarketEval scoring."

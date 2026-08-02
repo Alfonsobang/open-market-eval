@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Alfonsobang/open-market-eval/schemas/forecast.schema.json",
+  "title": "OpenMarketEval binary forecast",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["question_id", "forecaster", "probability", "created_at", "evidence_cutoff", "thesis", "evidence", "falsifiers"],
+  "properties": {
+    "question_id": {"type": "string", "minLength": 1},
+    "forecaster": {"type": "string", "minLength": 1},
+    "probability": {"type": "number", "minimum": 0, "maximum": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "evidence_cutoff": {"type": "string", "format": "date-time"},
+    "thesis": {"type": "string"},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["url", "published_at"],
+        "properties": {
+          "url": {"type": "string"},
+          "published_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "falsifiers": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If OpenMarketEval helps your research, cite the repository and version used."
+title: "OpenMarketEval"
+type: software
+version: 0.1.0
+date-released: 2026-08-02
+license: Apache-2.0
+repository-code: "https://github.com/Alfonsobang/open-market-eval"
+authors:
+  - family-names: "OpenMarketEval contributors"
