@@ -8,7 +8,7 @@
 
 OpenMarketEval is an open evaluation harness for **stock-market and major-event forecasting agents**. It turns forecasts into timestamped, evidence-grounded artifacts, seals them before outcomes are known, then resolves and scores every hit and miss.
 
-[中文文档](README.zh-CN.md) | [Protocol](docs/protocol.md) | [Benchmark design](docs/benchmark-design.md) | [Roadmap](docs/roadmap.md)
+[Live dashboard](https://alfonsobang.github.io/open-market-eval/) | [Open forecast round](live/rounds/2026-08/README.md) | [中文文档](README.zh-CN.md) | [Protocol](docs/protocol.md) | [Roadmap](docs/roadmap.md)
 
 ![OpenMarketEval lifecycle](docs/assets/open-market-eval-social-preview.png)
 
@@ -31,6 +31,16 @@ Report: runs/demo/scorecard.md
 ```
 
 The included probabilities are a **synthetic software fixture**, not claimed forecasting performance. The demo proves the evaluation loop works end to end.
+
+## Live round: 2026-08
+
+The first L2 round is open with six time-bound questions covering U.S. employment, CPI, GDP, the ECB, and the FOMC. Every question has a primary-source resolution rule and a committed 0.5 baseline.
+
+- Browse deadlines on the [live dashboard](https://alfonsobang.github.io/open-market-eval/).
+- Read the [round policy and submission steps](live/rounds/2026-08/README.md).
+- Inspect the committed [`seal.json`](live/rounds/2026-08/seal.json).
+
+The baseline is deliberately uninformative and makes no event-specific claim. Its purpose is to verify the L2 submission and scoring path before outcomes are known.
 
 ## What is different
 
@@ -98,6 +108,7 @@ python -m open_market_eval score \
 - **Harbor task:** a small time-safe forecasting task with a deterministic verifier in [`integrations/harbor`](integrations/harbor/README.md).
 - **Codex skill:** reusable workflow and output contract in [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md).
 - **CI:** tests on Python 3.10 and 3.12, skill validation, and Markdown link checks.
+- **Public dashboard:** a dependency-free static Pages build with live deadlines and a clearly labeled synthetic scorecard.
 
 ## Evaluation tracks
 

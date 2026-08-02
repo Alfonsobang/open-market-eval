@@ -1,0 +1,18 @@
+{
+  "algorithm": "sha256",
+  "combined_sha256": "ea96f27d4f9ce3a52b491d046c57ebfe75bb75c311b759704ea842da46a88f91",
+  "created_at": "2026-08-02T07:50:58.360706Z",
+  "files": [
+    {
+      "bytes": 2129,
+      "path": "live/rounds/2026-08/baselines/uninformative-0-5.jsonl",
+      "sha256": "c883d4881ea434736a3ce54bcaee8445a2108c5e601fa3c3f7199bf3e4ca0fe1"
+    },
+    {
+      "bytes": 4110,
+      "path": "live/rounds/2026-08/questions.jsonl",
+      "sha256": "b65849eef4867ddbd8203c466c664a305eb0c8fd30acbcd3a680a989598c4247"
+    }
+  ],
+  "note": "Commit this manifest before outcomes are known to create a public audit trail."
+}

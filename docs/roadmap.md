@@ -2,7 +2,9 @@
 
 ## v0.2: real public question pack
 
-- Add 30 point-in-time questions across equities, macro, regulation, geopolitics, and supply chains.
+- [x] Launch the first six-question L2 macro and policy round.
+- [x] Publish a static dashboard with live deadlines and smoke-test metrics.
+- [ ] Expand to 30 point-in-time questions across equities, macro, regulation, geopolitics, and supply chains.
 - Publish frozen evidence bundles with source timestamps and redistribution notes.
 - Add abstention and multi-class scoring.
 
@@ -14,7 +16,7 @@
 
 ## v0.4: live evaluation loop
 
-- Open a recurring public forecast round.
+- [x] Open the first public forecast round.
 - Automate close-time seals and resolution pull requests.
 - Add a static calibration dashboard generated from committed artifacts.
 

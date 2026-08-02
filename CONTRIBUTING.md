@@ -9,6 +9,7 @@ OpenMarketEval welcomes small, auditable contributions that improve market-event
 - Add a proper scoring rule, calibration diagnostic, or temporal-integrity test.
 - Add a Harbor-compatible task without network or private-data dependencies.
 - Improve English or Chinese documentation while preserving technical meaning.
+- Submit a forecast to an open live round before its question closes.
 
 ## Quality bar
 
@@ -28,3 +29,5 @@ python -m open_market_eval demo --output runs/demo
 ```
 
 For a benchmark or scoring change, explain what failure mode it catches and provide a minimal fixture. Maintainers may decline large generated dumps, promotional content, unverifiable forecasts, or datasets with unclear rights.
+
+For a live-round forecast, follow the round README. The GitHub commit must predate the question close time, and the submitted seal must match the forecast file. Late entries cannot receive L2 status.

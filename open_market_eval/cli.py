@@ -9,6 +9,7 @@ from .io import read_jsonl, write_json, write_jsonl
 from .ledger import seal_files
 from .report import render_markdown
 from .scoring import score_forecasts
+from .site import build_site
 from .validation import validate_forecast, validate_question, validate_resolution
 
 
@@ -88,6 +89,11 @@ def build_parser() -> argparse.ArgumentParser:
     agent.add_argument("--command", required=True)
     agent.add_argument("--forecaster", required=True)
     agent.add_argument("--output", default="forecasts.jsonl")
+    website = subparsers.add_parser("build-site", help="build the static public dashboard")
+    website.add_argument("--output", default="site", type=Path)
+    website.add_argument(
+        "--questions", default="live/rounds/2026-08/questions.jsonl"
+    )
     return parser
 
 
@@ -112,6 +118,23 @@ def main(argv: list[str] | None = None) -> int:
             forecasts = run_agent(args.command, read_jsonl(args.questions), args.forecaster)
             write_jsonl(args.output, forecasts)
             print(f"Wrote {len(forecasts)} forecasts to {args.output}")
+        elif args.action == "build-site":
+            root = Path(__file__).resolve().parents[1]
+            smoke = root / "benchmarks" / "synthetic-smoke"
+            result = score_forecasts(
+                read_jsonl(smoke / "forecasts.jsonl"),
+                read_jsonl(smoke / "resolutions.jsonl"),
+            )
+            questions_path = Path(args.questions)
+            if not questions_path.is_absolute():
+                questions_path = root / questions_path
+            build_site(
+                result,
+                read_jsonl(questions_path),
+                args.output,
+                root / "docs" / "assets" / "open-market-eval-social-preview.png",
+            )
+            print(f"Site: {args.output / 'index.html'}")
     except (OSError, ValueError, RuntimeError) as exc:
         print(f"error: {exc}")
         return 2

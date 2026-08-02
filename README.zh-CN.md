@@ -8,7 +8,7 @@
 
 OpenMarketEval 是面向**股市与重大事件预测 Agent** 的开放评测框架。它把预测变成带时间戳、可核查证据的研究产物，在结果揭晓前完成封存，并在事件结束后结算和评分，命中与失误都会保留。
 
-[English](README.md) | [预测协议](docs/protocol.md) | [评测集设计](docs/benchmark-design.md) | [路线图](docs/roadmap.md)
+[实时看板](https://alfonsobang.github.io/open-market-eval/) | [开放预测轮次](live/rounds/2026-08/README.md) | [English](README.md) | [预测协议](docs/protocol.md) | [路线图](docs/roadmap.md)
 
 ![OpenMarketEval 生命周期](docs/assets/open-market-eval-social-preview.png)
 
@@ -31,6 +31,16 @@ Report: runs/demo/scorecard.md
 ```
 
 仓库中的概率是用于测试软件的**合成样例**，不代表真实预测业绩。这个 demo 只证明评测闭环可以端到端运行。
+
+## 实时轮次：2026-08
+
+首个 L2 轮次已经开放，包含 6 个有明确截止时间的问题，覆盖美国就业、CPI、GDP、欧洲央行和美联储。每个问题都有官方结算来源，并提交了一个已封存的 0.5 基线。
+
+- 在[实时看板](https://alfonsobang.github.io/open-market-eval/)查看问题和截止时间。
+- 阅读[轮次规则与提交步骤](live/rounds/2026-08/README.md)。
+- 检查已经提交的 [`seal.json`](live/rounds/2026-08/seal.json)。
+
+这个 0.5 基线刻意不使用任何事件信息，也不表达具体判断；它只用于在结果揭晓前验证 L2 提交、封存和后续评分流程。
 
 ## 项目解决什么问题
 
@@ -98,6 +108,7 @@ python -m open_market_eval score \
 - **Harbor 任务：** [`integrations/harbor`](integrations/harbor/README.md) 中包含一个带确定性 verifier 的时点安全预测任务。
 - **Codex skill：** [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md) 中包含可复用的预测工作流与输出协议。
 - **CI：** Python 3.10/3.12 测试、skill 校验和 Markdown 链接检查。
+- **公开看板：** 无第三方前端依赖的 GitHub Pages 页面，展示实时截止时间和明确标注为合成数据的评分卡。
 
 ## 评测方向
 
