@@ -22,12 +22,13 @@ OpenMarketEval is an open quality gate and public test arena for A-share researc
 ```bash
 git clone https://github.com/Alfonsobang/open-market-eval.git
 cd open-market-eval
+python -m open_market_eval doctor --output runs/doctor.json
 python -m open_market_eval audit-spec \
   --spec examples/backtests/leaky-a-share-contract.json \
   --output runs/my-preflight.json
 ```
 
-The command produces machine-readable JSON and a review-ready Markdown report. The included risky contract triggers all eight checks; the conservative contract passes. Neither fixture contains a strategy, market data, or performance claim.
+`doctor` verifies all five bundled integrity paths offline: the forecast loop, backtest gate, evidence gate, three Harbor tasks, and the live-round seal. The audit command then produces machine-readable JSON and a review-ready Markdown report. The included risky contract triggers all eight checks; the conservative contract passes. Neither fixture contains a strategy, market data, or performance claim.
 
 ## Backtest Preflight
 

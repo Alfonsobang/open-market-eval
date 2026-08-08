@@ -7,6 +7,37 @@ from pathlib import Path
 
 
 class CliTests(unittest.TestCase):
+    def test_doctor_verifies_all_public_integrity_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "doctor.json"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "open_market_eval",
+                    "doctor",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertIn("Ready: 5/5 integrity paths passed", completed.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "ready")
+            self.assertEqual(
+                [check["id"] for check in report["checks"]],
+                [
+                    "forecast-loop",
+                    "backtest-preflight",
+                    "evidence-audit",
+                    "harbor-tasks",
+                    "live-round-seal",
+                ],
+            )
+
     def test_research_packet_audit_writes_review_artifacts(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "research-audit.json"

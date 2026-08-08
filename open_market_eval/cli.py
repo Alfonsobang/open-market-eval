@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -120,6 +121,115 @@ def command_audit_demo(output: Path) -> None:
     print(f"Report: {output / 'scorecard.md'}")
 
 
+def command_doctor(root: Path, output: Path | None = None) -> None:
+    """Run the repository's public integrity paths without network access."""
+    if sys.version_info < (3, 10):
+        raise RuntimeError("Python 3.10 or newer is required")
+    root = root.resolve()
+    checks: list[dict[str, str]] = []
+
+    smoke = root / "benchmarks" / "synthetic-smoke"
+    questions = smoke / "questions.jsonl"
+    forecasts = smoke / "forecasts.jsonl"
+    resolutions = smoke / "resolutions.jsonl"
+    validate_bundle(str(questions), str(forecasts), str(resolutions))
+    question_count = len(read_jsonl(questions))
+    checks.append(
+        {
+            "id": "forecast-loop",
+            "detail": f"{question_count} synthetic forecasts validated",
+        }
+    )
+
+    contract = json.loads(
+        (root / "examples" / "backtests" / "conservative-a-share-contract.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    preflight = audit_backtest_contract(contract)
+    if not preflight["passed"]:
+        raise ValueError("conservative backtest control did not pass")
+    checks.append(
+        {
+            "id": "backtest-preflight",
+            "detail": f"{preflight['checks_run']} checks passed",
+        }
+    )
+
+    packet = json.loads(
+        (root / "examples" / "research-packets" / "conservative-packet.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    evidence = audit_research_packet(packet)
+    if not evidence["passed"]:
+        raise ValueError("conservative research-packet control did not pass")
+    checks.append(
+        {
+            "id": "evidence-audit",
+            "detail": f"{evidence['checks_run']} checks passed",
+        }
+    )
+
+    harbor_root = root / "integrations" / "harbor"
+    task_names = (
+        "a-share-backtest-audit",
+        "a-share-research-evidence",
+        "market-forecast",
+    )
+    for task_name in task_names:
+        task_root = harbor_root / task_name
+        required = (
+            task_root / "task.toml",
+            task_root / "instruction.md",
+            task_root / "environment" / "Dockerfile",
+            task_root / "solution" / "solve.sh",
+            task_root / "tests" / "test.sh",
+        )
+        if not all(path.is_file() for path in required):
+            raise ValueError(f"incomplete Harbor task: {task_name}")
+        config = (task_root / "task.toml").read_text(encoding="utf-8")
+        if (
+            'schema_version = "1.3"' not in config
+            or 'network_mode = "no-network"' not in config
+        ):
+            raise ValueError(f"non-portable Harbor task configuration: {task_name}")
+    checks.append(
+        {
+            "id": "harbor-tasks",
+            "detail": f"{len(task_names)} portable no-network tasks found",
+        }
+    )
+
+    round_root = root / "live" / "rounds" / "2026-08"
+    live_questions = round_root / "questions.jsonl"
+    baseline = round_root / "baselines" / "uninformative-0-5.jsonl"
+    validate_bundle(str(live_questions), str(baseline), None)
+    verify_seal(
+        json.loads((round_root / "seal.json").read_text(encoding="utf-8")),
+        [live_questions, baseline],
+    )
+    checks.append(
+        {
+            "id": "live-round-seal",
+            "detail": "question slate and baseline seal verified",
+        }
+    )
+
+    report = {
+        "status": "ready",
+        "checks": checks,
+        "claim_boundary": "Repository integrity only; not investment performance or advice.",
+    }
+    if output is not None:
+        write_json(output, report)
+    for check in checks:
+        print(f"[PASS] {check['id']}: {check['detail']}")
+    print(f"Ready: {len(checks)}/{len(checks)} integrity paths passed")
+    if output is not None:
+        print(f"Report: {output}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="open-market-eval")
     subparsers = parser.add_subparsers(dest="action", required=True)
@@ -129,6 +239,11 @@ def build_parser() -> argparse.ArgumentParser:
         "audit-demo", help="run the A-share backtest forensics development pack"
     )
     audit_demo.add_argument("--output", default="runs/audit-demo", type=Path)
+    doctor = subparsers.add_parser(
+        "doctor", help="verify every bundled evaluation path without network access"
+    )
+    doctor.add_argument("--root", default=Path(__file__).resolve().parents[1], type=Path)
+    doctor.add_argument("--output", type=Path)
     audit_score = subparsers.add_parser(
         "score-audit", help="score an A-share backtest audit submission"
     )
@@ -212,6 +327,8 @@ def main(argv: list[str] | None = None) -> int:
             command_demo(args.output)
         elif args.action == "audit-demo":
             command_audit_demo(args.output)
+        elif args.action == "doctor":
+            command_doctor(args.root, args.output)
         elif args.action == "score-audit":
             result = score_audit_submission(
                 read_jsonl(args.submission), read_jsonl(args.labels)
