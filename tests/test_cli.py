@@ -7,6 +7,46 @@ from pathlib import Path
 
 
 class CliTests(unittest.TestCase):
+    def test_audit_spec_reports_real_contract_findings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "preflight.json"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "open_market_eval",
+                    "audit-spec",
+                    "--spec",
+                    "examples/backtests/leaky-a-share-contract.json",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertIn("Findings: 8", completed.stdout)
+            self.assertTrue(output.exists())
+            self.assertTrue(output.with_suffix(".md").exists())
+
+    def test_audit_spec_strict_mode_blocks_findings(self):
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "open_market_eval",
+                "audit-spec",
+                "--spec",
+                "examples/backtests/leaky-a-share-contract.json",
+                "--strict",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 1)
+
     def test_audit_demo_builds_scorecard(self):
         with tempfile.TemporaryDirectory() as directory:
             completed = subprocess.run(
@@ -26,6 +66,33 @@ class CliTests(unittest.TestCase):
             self.assertTrue((Path(directory) / "scorecard.json").exists())
             self.assertTrue((Path(directory) / "scorecard.md").exists())
             self.assertIn("10 A-share backtest audit cases", completed.stdout)
+
+    def test_stdio_audit_agent_runs_and_scores(self):
+        with tempfile.TemporaryDirectory() as directory:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "open_market_eval",
+                    "run-audit-agent",
+                    "--command",
+                    f'"{sys.executable}" examples/agents/empty_auditor.py',
+                    "--agent-name",
+                    "empty-protocol-baseline",
+                    "--output-dir",
+                    directory,
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertIn("Scored 10 cases", completed.stdout)
+            self.assertTrue((Path(directory) / "audit_report.jsonl").exists())
+            self.assertTrue((Path(directory) / "scorecard.json").exists())
+            self.assertTrue((Path(directory) / "scorecard.md").exists())
+            metadata = json.loads((Path(directory) / "run.json").read_text())
+            self.assertEqual(metadata["agent_name"], "empty-protocol-baseline")
 
     def test_demo_builds_scorecard(self):
         with tempfile.TemporaryDirectory() as directory:

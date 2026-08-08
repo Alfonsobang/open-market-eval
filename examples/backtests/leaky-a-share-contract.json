@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1",
+  "name": "leaky-a-share-demo",
+  "market": "cn_a_cash",
+  "signal": {
+    "formed_at": "after_close",
+    "execution": "same_close"
+  },
+  "universe": {
+    "policy": "current_snapshot",
+    "includes_delisted": false
+  },
+  "prices": {
+    "execution_series": "adjusted"
+  },
+  "settlement": {
+    "enforce_t_plus_one": false
+  },
+  "tradability": {
+    "suspensions": false,
+    "price_limits": false
+  },
+  "costs": {
+    "commission_bps": 0,
+    "stamp_duty_bps_sell": 0,
+    "slippage_bps": 0
+  },
+  "fundamentals": {
+    "version_policy": "latest_backfilled"
+  }
+}

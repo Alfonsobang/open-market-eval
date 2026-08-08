@@ -1,0 +1,60 @@
+name: Backtest preflight
+
+on:
+  pull_request:
+    paths:
+      - "open_market_eval/preflight.py"
+      - "open_market_eval/cli.py"
+      - "open_market_eval/harness.py"
+      - "schemas/backtest-contract.schema.json"
+      - "examples/backtests/**"
+      - "examples/agents/**"
+      - "tests/test_preflight.py"
+      - ".github/workflows/backtest-preflight.yml"
+  push:
+    branches: [main]
+    paths:
+      - "open_market_eval/preflight.py"
+      - "open_market_eval/cli.py"
+      - "open_market_eval/harness.py"
+      - "schemas/backtest-contract.schema.json"
+      - "examples/backtests/**"
+      - "examples/agents/**"
+      - "tests/test_preflight.py"
+      - ".github/workflows/backtest-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run preflight tests
+        run: python -m unittest tests.test_preflight -v
+      - name: Require the conservative contract to pass
+        run: >-
+          python -m open_market_eval audit-spec
+          --spec examples/backtests/conservative-a-share-contract.json
+          --output runs/conservative-preflight.json
+          --strict
+      - name: Verify the leaky fixture exposes all checks
+        run: >-
+          python -m open_market_eval audit-spec
+          --spec examples/backtests/leaky-a-share-contract.json
+          --output runs/leaky-preflight.json
+      - name: Exercise the audit Agent protocol
+        run: >-
+          python -m open_market_eval run-audit-agent
+          --command "python examples/agents/empty_auditor.py"
+          --agent-name empty-protocol-baseline
+          --output-dir runs/empty-auditor
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backtest-preflight-reports
+          path: runs/*preflight.*

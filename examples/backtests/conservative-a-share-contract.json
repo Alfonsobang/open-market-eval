@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1",
+  "name": "conservative-a-share-demo",
+  "market": "cn_a_cash",
+  "signal": {
+    "formed_at": "after_close",
+    "execution": "next_open"
+  },
+  "universe": {
+    "policy": "point_in_time",
+    "includes_delisted": true
+  },
+  "prices": {
+    "execution_series": "raw"
+  },
+  "settlement": {
+    "enforce_t_plus_one": true
+  },
+  "tradability": {
+    "suspensions": true,
+    "price_limits": true
+  },
+  "costs": {
+    "commission_bps": 3,
+    "stamp_duty_bps_sell": 5,
+    "slippage_bps": 5
+  },
+  "fundamentals": {
+    "version_policy": "as_reported"
+  }
+}

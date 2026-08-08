@@ -7,7 +7,7 @@ from pathlib import Path
 TASK_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ARTIFACT = TASK_ROOT / "solution" / "audit_report.json"
 ARTIFACT = Path(os.environ.get("AUDIT_REPORT_ARTIFACT", "/logs/artifacts/audit_report.json"))
-if not ARTIFACT.exists():
+if not Path("/logs").exists() and not ARTIFACT.exists():
     ARTIFACT = DEFAULT_ARTIFACT
 
 ALLOWED_CODES = {
@@ -27,12 +27,9 @@ class AuditArtifactTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.answer = json.loads(ARTIFACT.read_text(encoding="utf-8"))
-        cls.case = json.loads(
-            (TASK_ROOT / "fixtures" / "case.json").read_text(encoding="utf-8")
-        )
 
     def test_contract(self):
-        self.assertEqual(self.answer.get("case_id"), self.case["id"])
+        self.assertEqual(self.answer.get("case_id"), "bt-003")
         findings = self.answer.get("findings")
         self.assertIsInstance(findings, list)
         self.assertEqual(len(findings), len(EXPECTED_CODES))

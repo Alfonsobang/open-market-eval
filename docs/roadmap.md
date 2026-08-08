@@ -1,5 +1,14 @@
 # Roadmap
 
+## v0.5: Research quality gate
+
+- [x] Publish a machine-readable A-share backtest contract.
+- [x] Add an eight-check preflight linter with browser, CLI, and CI entry points.
+- [x] Run and score arbitrary audit Agents through JSON over stdio.
+- [x] Validate both task configurations with an independent Harbor 0.20 installation.
+- [ ] Run the Oracle task in a container and publish the trajectory and reward artifact.
+- [ ] Accept and verify the first external Backtest Forensics result.
+
 ## v0.4: A-Share Agent Arena
 
 - [x] Launch the 10-case Backtest Forensics public development pack.
@@ -18,13 +27,13 @@
 - [ ] Publish the first 10 filing-search and point-in-time QA tasks with frozen evidence.
 - [ ] Add deterministic verifiers for citation support, unit normalization, and report-version alignment.
 
-## v0.4: backtest audit challenge
+## Next: sealed backtest audit challenge
 
 - Publish intentionally flawed A-share notebooks covering look-ahead, current-universe projection, adjusted-price execution, T+1, suspensions, price limits, and cost omissions.
 - Score defect recall, false positives, reproducibility, and repair quality.
 - Add a Harbor adapter and repeated trials for at least three public agent scaffolds.
 
-## v0.5: live A-share event loop
+## Later: live A-share event loop
 
 - Open a recurring set of objectively resolvable company and policy event questions.
 - Seal every forecast before close and resolve from CNInfo, exchange, or regulator sources.

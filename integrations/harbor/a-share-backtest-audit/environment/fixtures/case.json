@@ -1,0 +1,10 @@
+{
+  "id": "bt-003",
+  "title": "Limit-up purchase and same-day reversal",
+  "market": "Mainland China A-share cash equities",
+  "brief": "The model produces a signal after the open. The backtest fills the entire target buy order while the security is limit-up, then permits the newly purchased position to be sold later on the same trading day.",
+  "execution_rules": {
+    "limit_up_buy_order": "filled in full at the limit price",
+    "new_position_sell_time": "same trading day"
+  }
+}

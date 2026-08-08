@@ -22,6 +22,7 @@ jobs:
       - run: python -m open_market_eval demo --output runs/demo
       - run: python -m open_market_eval build-site --output site
       - run: python -m unittest discover -s integrations/harbor/market-forecast/tests -v
+      - run: python -m unittest discover -s integrations/harbor/a-share-backtest-audit/tests -v
 
   skill:
     runs-on: ubuntu-latest

@@ -8,8 +8,12 @@ from pathlib import Path
 TASK_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ARTIFACT = TASK_ROOT / "solution" / "forecast.json"
 ARTIFACT = Path(os.environ.get("MARKET_FORECAST_ARTIFACT", "/logs/artifacts/forecast.json"))
-if not ARTIFACT.exists():
+if not Path("/logs").exists() and not ARTIFACT.exists():
     ARTIFACT = DEFAULT_ARTIFACT
+
+QUESTION = Path("/app/fixtures/question.json")
+if not QUESTION.exists():
+    QUESTION = TASK_ROOT / "fixtures" / "question.json"
 
 
 def timestamp(value):
@@ -20,9 +24,7 @@ class ForecastArtifactTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.answer = json.loads(ARTIFACT.read_text(encoding="utf-8"))
-        cls.question = json.loads(
-            (TASK_ROOT / "fixtures" / "question.json").read_text(encoding="utf-8")
-        )
+        cls.question = json.loads(QUESTION.read_text(encoding="utf-8"))
 
     def test_contract(self):
         required = {

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Alfonsobang/open-market-eval/schemas/backtest-contract.schema.json",
+  "title": "A-Share Backtest Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "name", "market", "signal", "universe", "prices", "settlement", "tradability", "costs", "fundamentals"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "name": {"type": "string", "minLength": 1},
+    "market": {"const": "cn_a_cash"},
+    "signal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formed_at", "execution"],
+      "properties": {
+        "formed_at": {"enum": ["before_open", "intraday", "after_close"]},
+        "execution": {"enum": ["same_close", "next_open", "next_vwap", "custom"]}
+      }
+    },
+    "universe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "includes_delisted"],
+      "properties": {
+        "policy": {"enum": ["point_in_time", "current_snapshot"]},
+        "includes_delisted": {"type": "boolean"}
+      }
+    },
+    "prices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["execution_series"],
+      "properties": {"execution_series": {"enum": ["raw", "adjusted"]}}
+    },
+    "settlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enforce_t_plus_one"],
+      "properties": {"enforce_t_plus_one": {"type": "boolean"}}
+    },
+    "tradability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["suspensions", "price_limits"],
+      "properties": {
+        "suspensions": {"type": "boolean"},
+        "price_limits": {"type": "boolean"}
+      }
+    },
+    "costs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commission_bps", "stamp_duty_bps_sell", "slippage_bps"],
+      "properties": {
+        "commission_bps": {"type": "number", "minimum": 0},
+        "stamp_duty_bps_sell": {"type": "number", "minimum": 0},
+        "slippage_bps": {"type": "number", "minimum": 0}
+      }
+    },
+    "fundamentals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version_policy"],
+      "properties": {"version_policy": {"enum": ["as_reported", "latest_backfilled"]}}
+    }
+  }
+}

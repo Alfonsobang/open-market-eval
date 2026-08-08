@@ -5,23 +5,40 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
 
-## A 股研究 Agent 联赛
+## A 股研究质量门禁 + Agent 试验场
 
-**带上你的研究 Agent，证明它能抓出 A 股回测里偷看的未来。**
+**先审计回测，再相信收益；先测试 Agent，再相信研究结论。**
 
-OpenMarketEval 是一个面向 A 股研究 Agent 的公开联赛。首关 **Backtest Forensics / 回测取证** 包含 10 个符合 A 股市场结构的场景、8 类缺陷、干净控制组、确定性评分器和一个 Harbor 风格任务。
+OpenMarketEval 是面向 A 股研究的开源质量门禁与公共试验场。它首先解决两个可以落地的问题：
 
-[进入联赛](https://alfonsobang.github.io/open-market-eval/) | [首关任务包](benchmarks/a-share-backtest-forensics/README.md) | [English](README.md) | [Harbor 任务](integrations/harbor/a-share-backtest-audit/) | [运营系统](docs/arena-operating-system.zh-CN.md)
+1. **Backtest Preflight / 回测体检：** 在浏览器或 CI 中检查 8 类 A 股研究设计风险，不需要上传策略代码和数据。
+2. **Backtest Forensics / 回测取证：** 让任意 Agent 挑战 10 个对抗场景，通过干净控制组和确定性评分器计算精确率、召回率、F1 与逐案命中率。
+
+[在线体检回测](https://alfonsobang.github.io/open-market-eval/#preflight) | [运行 Agent 挑战](benchmarks/a-share-backtest-forensics/README.md) | [English](README.md) | [Harbor 任务](integrations/harbor/a-share-backtest-audit/)
 
 ![A 股回测取证](docs/assets/a-share-arena-forensics.png)
 
 ```bash
 git clone https://github.com/Alfonsobang/open-market-eval.git
 cd open-market-eval
-python -m open_market_eval audit-demo
+python -m open_market_eval audit-spec \
+  --spec examples/backtests/leaky-a-share-contract.json \
+  --output runs/my-preflight.json
 ```
 
-该命令会生成 JSON 与 Markdown 成绩单，包含精确率、召回率、F1、逐案命中率以及每个漏检和误报。仓库中的示例是手工编写的格式样例，**不是模型成绩**，并且故意漏掉两项缺陷。
+该命令会生成机器可读的 JSON 和便于评审的 Markdown 报告。高风险样例会触发全部 8 项检查，保守样例可以通过。两个样例均不包含策略、行情数据或收益声明。
+
+## Backtest Preflight / 回测体检
+
+使用可移植的 [`backtest-contract.schema.json`](schemas/backtest-contract.schema.json) 声明研究假设，再把检查设为 CI 门禁：
+
+```bash
+python -m open_market_eval audit-spec \
+  --spec examples/backtests/conservative-a-share-contract.json \
+  --strict
+```
+
+当前检查覆盖信号与成交时点、历史时点股票池、退市样本、可成交价格、T+1、停牌与涨跌停、交易成本以及财务数据修订。通过检查只表示已声明的配置没有触发这 8 类静态缺陷，并不代表代码、数据、收益或投资逻辑已经被验证。
 
 ## 首关：Backtest Forensics
 
@@ -34,10 +51,13 @@ python -m open_market_eval audit-demo
 | 误报控制 | 时点安全、执行保守的干净场景 | 精确率 |
 
 ```bash
-python -m open_market_eval score-audit \
-  --submission path/to/audit_report.jsonl \
-  --output runs/my-agent/scorecard.json
+python -m open_market_eval run-audit-agent \
+  --command "python path/to/your_auditor.py" \
+  --agent-name my-agent \
+  --output-dir runs/my-agent
 ```
+
+harness 会逐案通过 stdin 发送 JSON，从 stdout 收集 Agent 的缺陷判断，并生成原始提交、运行元数据、JSON 成绩单和 Markdown 报告。接入方式见 [审计 Agent 适配协议](docs/audit-agent-adapter.md)。
 
 公开 Agent 榜目前为空。首个被接受的成绩必须披露 Agent、模型、完整命令、运行环境、原始输出和完整成绩单。开发集成绩不会被包装成隐藏测试榜单或投资业绩。
 
@@ -143,10 +163,11 @@ python -m open_market_eval score \
 ## 当前已经包含
 
 - **评测 harness：** 数据结构与时点完整性校验、封存、结算和评分。
+- **回测质量门禁：** 面向 A 股研究假设的 8 项合同检查，可在浏览器与 CI 中运行。
 - **Smoke 评测集：** 6 个确定性的合成事件，覆盖权益、宏观、财报、监管、供应链和地缘事件。
 - **Agent 协议：** 无第三方依赖的 JSON-over-stdio runner，可接入任意语言和模型栈。
 - **可移植数据协议：** [`schemas/`](schemas/) 中包含问题、预测与结算的 JSON Schema。
-- **Harbor 任务：** [`integrations/harbor`](integrations/harbor/README.md) 中包含一个带确定性 verifier 的时点安全预测任务。
+- **Harbor 任务：** [`integrations/harbor`](integrations/harbor/README.md) 中包含两个符合 schema 1.3 的任务，分别评测时点安全预测和 A 股回测审计，并配有确定性 verifier。
 - **Codex skill：** [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md) 中包含可复用的预测工作流与输出协议。
 - **CI：** Python 3.10/3.12 测试、实时封存校验、skill 校验和 Markdown 链接检查。
 - **公开看板：** 无第三方前端依赖的 GitHub Pages 页面，展示实时截止时间和明确标注为合成数据的评分卡。

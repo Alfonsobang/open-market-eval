@@ -14,13 +14,16 @@
 - A-share lab specification: benchmarks/a-share-lab/README.md
 - Current challenge: benchmarks/a-share-backtest-forensics/
 - Current challenge cases: benchmarks/a-share-backtest-forensics/cases.jsonl
+- Backtest contract schema: schemas/backtest-contract.schema.json
+- Backtest contract examples: examples/backtests/
+- Audit Agent adapter: docs/audit-agent-adapter.md
 - Harbor A-share audit task: integrations/harbor/a-share-backtest-audit/
 - Arena operating system: docs/arena-operating-system.zh-CN.md
 - Live dashboard: https://alfonsobang.github.io/open-market-eval/
 - Current live round: live/rounds/2026-08/
 - Contributor rules: CONTRIBUTING.md
 - Agent skill: skills/forecast-market-events/SKILL.md
-- Harbor-style task: integrations/harbor/market-forecast/
+- Harbor 1.3 tasks: integrations/harbor/
 
 ## Commands
 
@@ -33,6 +36,8 @@
 - Inspect one track: `python -m open_market_eval show-track --track backtest-audit`
 - Run Challenge 0: `python -m open_market_eval audit-demo`
 - Score an Agent: `python -m open_market_eval score-audit --submission <jsonl>`
+- Audit a backtest contract: `python -m open_market_eval audit-spec --spec <json> --strict`
+- Run and score an audit Agent: `python -m open_market_eval run-audit-agent --command <command> --agent-name <name> --output-dir <dir>`
 
 ## Safety boundary
 

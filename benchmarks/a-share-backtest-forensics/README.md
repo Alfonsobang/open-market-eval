@@ -10,13 +10,16 @@ This development pack contains 10 synthetic but market-structure-specific audit 
 python -m open_market_eval audit-demo
 ```
 
-Score your own Agent output:
+Run and score your own Agent end to end:
 
 ```bash
-python -m open_market_eval score-audit \
-  --submission path/to/audit_report.jsonl \
-  --output runs/my-agent/audit-scorecard.json
+python -m open_market_eval run-audit-agent \
+  --command "python path/to/your_auditor.py" \
+  --agent-name my-agent \
+  --output-dir runs/my-agent
 ```
+
+See the [JSON-over-stdio adapter contract](../../docs/audit-agent-adapter.md). To score a previously generated submission, use `score-audit`.
 
 ## Submission contract
 

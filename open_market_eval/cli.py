@@ -7,9 +7,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .audit import render_audit_markdown, score_audit_submission
-from .harness import run_agent
+from .harness import run_agent, run_audit_agent
 from .io import read_jsonl, write_json, write_jsonl
 from .ledger import seal_files, verify_seal
+from .preflight import audit_backtest_contract, render_preflight_markdown
 from .report import render_markdown
 from .scoring import score_forecasts
 from .site import build_site
@@ -135,6 +136,27 @@ def build_parser() -> argparse.ArgumentParser:
         "--labels", default="benchmarks/a-share-backtest-forensics/labels.jsonl"
     )
     audit_score.add_argument("--output", default="runs/audit-scorecard.json")
+    audit_agent = subparsers.add_parser(
+        "run-audit-agent",
+        help="run and score any JSON-over-stdio agent on Backtest Forensics",
+    )
+    audit_agent.add_argument(
+        "--cases", default="benchmarks/a-share-backtest-forensics/cases.jsonl"
+    )
+    audit_agent.add_argument(
+        "--labels", default="benchmarks/a-share-backtest-forensics/labels.jsonl"
+    )
+    audit_agent.add_argument("--command", required=True)
+    audit_agent.add_argument("--agent-name", required=True)
+    audit_agent.add_argument("--output-dir", default="runs/audit-agent", type=Path)
+    preflight = subparsers.add_parser(
+        "audit-spec", help="audit an A-share backtest contract before interpreting returns"
+    )
+    preflight.add_argument("--spec", required=True)
+    preflight.add_argument("--output", default="runs/backtest-preflight.json")
+    preflight.add_argument(
+        "--strict", action="store_true", help="exit non-zero when findings are present"
+    )
     validate = subparsers.add_parser("validate", help="validate temporal integrity and schemas")
     validate.add_argument("--questions", required=True)
     validate.add_argument("--forecasts", required=True)
@@ -191,6 +213,44 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Precision: {result['precision']:.1%}")
             print(f"Recall: {result['recall']:.1%}")
             print(f"F1: {result['f1']:.1%}")
+        elif args.action == "run-audit-agent":
+            args.output_dir.mkdir(parents=True, exist_ok=True)
+            submission = run_audit_agent(args.command, read_jsonl(args.cases))
+            submission_path = args.output_dir / "audit_report.jsonl"
+            write_jsonl(submission_path, submission)
+            result = score_audit_submission(submission, read_jsonl(args.labels))
+            write_json(args.output_dir / "scorecard.json", result)
+            (args.output_dir / "scorecard.md").write_text(
+                render_audit_markdown(result), encoding="utf-8"
+            )
+            write_json(
+                args.output_dir / "run.json",
+                {
+                    "agent_name": args.agent_name,
+                    "command": args.command,
+                    "case_count": len(submission),
+                    "benchmark": result["benchmark"],
+                    "claim_boundary": result["claim_boundary"],
+                },
+            )
+            print(f"Scored {len(submission)} cases for {args.agent_name}")
+            print(f"Precision: {result['precision']:.1%}")
+            print(f"Recall: {result['recall']:.1%}")
+            print(f"F1: {result['f1']:.1%}")
+            print(f"Artifacts: {args.output_dir}")
+        elif args.action == "audit-spec":
+            contract = json.loads(Path(args.spec).read_text(encoding="utf-8"))
+            result = audit_backtest_contract(contract)
+            write_json(args.output, result)
+            Path(args.output).with_suffix(".md").write_text(
+                render_preflight_markdown(result), encoding="utf-8"
+            )
+            print(f"Checks: {result['checks_run']}")
+            print(f"Findings: {result['finding_count']}")
+            print(f"Critical: {result['critical_count']}")
+            print(f"Report: {Path(args.output).with_suffix('.md')}")
+            if args.strict and not result["passed"]:
+                return 1
         elif args.action == "validate":
             validate_bundle(args.questions, args.forecasts, args.resolutions)
             print("Validation passed")

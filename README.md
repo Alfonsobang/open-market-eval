@@ -5,23 +5,40 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
 
-## A-Share Agent Arena
+## A-Share Research Quality Gate + Agent Arena
 
-**Bring your research Agent. Make it prove that an A-share backtest did not quietly use the future.**
+**Audit the backtest before trusting the return. Audit the Agent before trusting the research.**
 
-OpenMarketEval is a public league for reproducible A-share research-agent evaluation. Challenge 0 is **Backtest Forensics**: 10 market-structure-specific cases, eight defect classes, clean negative controls, deterministic scoring, and a Harbor-style task.
+OpenMarketEval is an open quality gate and public test arena for A-share research. It gives practitioners two things they can use today:
 
-[Enter the Arena](https://alfonsobang.github.io/open-market-eval/) | [Challenge pack](benchmarks/a-share-backtest-forensics/README.md) | [中文文档](README.zh-CN.md) | [Harbor task](integrations/harbor/a-share-backtest-audit/) | [Operating system](docs/arena-operating-system.zh-CN.md)
+1. **Backtest Preflight:** inspect eight A-share research-design risks in the browser or CI, without uploading strategy code or data.
+2. **Backtest Forensics:** run any Agent against 10 adversarial cases with clean controls and deterministic precision, recall, F1, and exact-case scoring.
+
+[Audit a backtest in your browser](https://alfonsobang.github.io/open-market-eval/#preflight) | [Run the Agent challenge](benchmarks/a-share-backtest-forensics/README.md) | [中文文档](README.zh-CN.md) | [Harbor task](integrations/harbor/a-share-backtest-audit/)
 
 ![A-share backtest forensics](docs/assets/a-share-arena-forensics.png)
 
 ```bash
 git clone https://github.com/Alfonsobang/open-market-eval.git
 cd open-market-eval
-python -m open_market_eval audit-demo
+python -m open_market_eval audit-spec \
+  --spec examples/backtests/leaky-a-share-contract.json \
+  --output runs/my-preflight.json
 ```
 
-The command produces a JSON and Markdown scorecard with precision, recall, F1, exact case accuracy, and every missed or invented defect. The included example is a manually authored format fixture, **not a model result**, and deliberately misses two defects.
+The command produces machine-readable JSON and a review-ready Markdown report. The included risky contract triggers all eight checks; the conservative contract passes. Neither fixture contains a strategy, market data, or performance claim.
+
+## Backtest Preflight
+
+Declare research assumptions once in the portable [`backtest-contract.schema.json`](schemas/backtest-contract.schema.json), then make the audit a CI gate:
+
+```bash
+python -m open_market_eval audit-spec \
+  --spec examples/backtests/conservative-a-share-contract.json \
+  --strict
+```
+
+The current checks cover signal/fill timing, point-in-time universes, delisted names, executable prices, T+1 settlement, suspensions and price limits, transaction costs, and fundamental-data revisions. A pass means only that the declared configuration avoided these static defects; it does not validate code, data, returns, or investment merit.
 
 ## Challenge 0: Backtest Forensics
 
@@ -34,10 +51,13 @@ The command produces a JSON and Markdown scorecard with precision, recall, F1, e
 | False-positive control | A conservative, point-in-time-safe setup | Precision |
 
 ```bash
-python -m open_market_eval score-audit \
-  --submission path/to/audit_report.jsonl \
-  --output runs/my-agent/scorecard.json
+python -m open_market_eval run-audit-agent \
+  --command "python path/to/your_auditor.py" \
+  --agent-name my-agent \
+  --output-dir runs/my-agent
 ```
+
+The harness sends one case at a time as JSON over stdin, captures the Agent's findings from stdout, and writes the submission, run metadata, JSON scorecard, and Markdown report. See the [audit Agent adapter contract](docs/audit-agent-adapter.md).
 
 Public Agent rankings are currently empty. The first accepted result must disclose the Agent, model, exact command, environment, raw output, and complete scorecard. Development-pack scores are never presented as hidden-test rankings or investment performance.
 
@@ -143,10 +163,11 @@ python -m open_market_eval score \
 ## Included today
 
 - **Evaluation harness:** schema and temporal-integrity validation, sealing, resolution, and scoring.
+- **Backtest quality gate:** an eight-check contract linter for A-share research assumptions, with browser and CI entry points.
 - **Smoke benchmark:** six deterministic synthetic events spanning equities, macro, earnings, regulation, supply chains, and geopolitics.
 - **Agent contract:** dependency-free JSON-over-stdio runner for any language or model stack.
 - **Portable schemas:** JSON Schema contracts for questions, forecasts, and resolutions in [`schemas/`](schemas/).
-- **Harbor task:** a small time-safe forecasting task with a deterministic verifier in [`integrations/harbor`](integrations/harbor/README.md).
+- **Harbor tasks:** two schema 1.3 tasks for time-safe forecasting and A-share backtest audit, with deterministic verifiers in [`integrations/harbor`](integrations/harbor/README.md).
 - **Codex skill:** reusable workflow and output contract in [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md).
 - **CI:** tests on Python 3.10 and 3.12, live-seal verification, skill validation, and Markdown link checks.
 - **Public dashboard:** a dependency-free static Pages build with live deadlines and a clearly labeled synthetic scorecard.

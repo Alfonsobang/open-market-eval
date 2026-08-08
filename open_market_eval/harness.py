@@ -40,3 +40,34 @@ def run_agent(command: str, questions: list[dict[str, Any]], forecaster: str) ->
             }
         )
     return forecasts
+
+
+def run_audit_agent(command: str, cases: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Run one backtest-audit case per process using the JSON-over-stdio contract."""
+    submissions = []
+    for case in cases:
+        completed = subprocess.run(
+            shlex.split(command),
+            input=json.dumps(case, ensure_ascii=False),
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=120,
+        )
+        if completed.returncode:
+            raise RuntimeError(
+                f"audit agent failed for {case['id']}: {completed.stderr.strip()}"
+            )
+        try:
+            answer = json.loads(completed.stdout)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(
+                f"audit agent returned invalid JSON for {case['id']}"
+            ) from exc
+        findings = answer.get("findings") if isinstance(answer, dict) else None
+        if not isinstance(findings, list):
+            raise RuntimeError(
+                f"audit agent response for {case['id']} must contain a findings list"
+            )
+        submissions.append({"case_id": case["id"], "findings": findings})
+    return submissions
