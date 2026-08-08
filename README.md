@@ -28,7 +28,7 @@ python -m open_market_eval audit-spec \
   --output runs/my-preflight.json
 ```
 
-`doctor` verifies all five bundled integrity paths offline: the forecast loop, backtest gate, evidence gate, three Harbor tasks, and the live-round seal. The audit command then produces machine-readable JSON and a review-ready Markdown report. The included risky contract triggers all eight checks; the conservative contract passes. Neither fixture contains a strategy, market data, or performance claim.
+`doctor` verifies all five bundled integrity paths offline: the forecast loop, backtest gate, evidence gate, three Harbor tasks, and the live-round seal. CI publishes its machine-readable output as the `project-integrity-report` artifact. The audit command then produces JSON and a review-ready Markdown report. The included risky contract triggers all eight checks; the conservative contract passes. Neither fixture contains a strategy, market data, or performance claim.
 
 ## Backtest Preflight
 

@@ -28,7 +28,7 @@ python -m open_market_eval audit-spec \
   --output runs/my-preflight.json
 ```
 
-`doctor` 会离线验证五条内置完整性路径：预测闭环、回测门禁、证据门禁、三项 Harbor 任务以及实时轮次封存。随后，审计命令会生成机器可读的 JSON 和便于评审的 Markdown 报告。高风险样例会触发全部 8 项检查，保守样例可以通过。两个样例均不包含策略、行情数据或收益声明。
+`doctor` 会离线验证五条内置完整性路径：预测闭环、回测门禁、证据门禁、三项 Harbor 任务以及实时轮次封存。CI 会把机器可读结果发布为 `project-integrity-report` 构建产物。随后，审计命令会生成 JSON 和便于评审的 Markdown 报告。高风险样例会触发全部 8 项检查，保守样例可以通过。两个样例均不包含策略、行情数据或收益声明。
 
 ## Backtest Preflight / 回测体检
 
