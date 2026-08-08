@@ -12,6 +12,7 @@ from .io import read_jsonl, write_json, write_jsonl
 from .ledger import seal_files, verify_seal
 from .preflight import audit_backtest_contract, render_preflight_markdown
 from .report import render_markdown
+from .retrieval import audit_research_packet, render_research_audit_markdown
 from .scoring import score_forecasts
 from .site import build_site
 from .validation import parse_time, validate_forecast, validate_question, validate_resolution
@@ -95,7 +96,7 @@ def command_demo(output: Path) -> None:
     )
     write_json(output / "scorecard.json", score)
     (output / "scorecard.md").write_text(render_markdown(score), encoding="utf-8")
-    print(f"Validated 6 time-safe forecasts")
+    print("Validated 6 time-safe forecasts")
     print(f"Seal: {manifest['combined_sha256'][:16]}...")
     print(f"Mean Brier: {score['mean_brier']:.4f}")
     print(f"Skill vs 0.5: {score['brier_skill_vs_0_5']:.1%}")
@@ -155,6 +156,15 @@ def build_parser() -> argparse.ArgumentParser:
     preflight.add_argument("--spec", required=True)
     preflight.add_argument("--output", default="runs/backtest-preflight.json")
     preflight.add_argument(
+        "--strict", action="store_true", help="exit non-zero when findings are present"
+    )
+    research_audit = subparsers.add_parser(
+        "audit-research-packet",
+        help="audit a financial-search evidence packet for cutoff and citation integrity",
+    )
+    research_audit.add_argument("--packet", required=True)
+    research_audit.add_argument("--output", default="runs/research-packet-audit.json")
+    research_audit.add_argument(
         "--strict", action="store_true", help="exit non-zero when findings are present"
     )
     validate = subparsers.add_parser("validate", help="validate temporal integrity and schemas")
@@ -244,6 +254,19 @@ def main(argv: list[str] | None = None) -> int:
             write_json(args.output, result)
             Path(args.output).with_suffix(".md").write_text(
                 render_preflight_markdown(result), encoding="utf-8"
+            )
+            print(f"Checks: {result['checks_run']}")
+            print(f"Findings: {result['finding_count']}")
+            print(f"Critical: {result['critical_count']}")
+            print(f"Report: {Path(args.output).with_suffix('.md')}")
+            if args.strict and not result["passed"]:
+                return 1
+        elif args.action == "audit-research-packet":
+            packet = json.loads(Path(args.packet).read_text(encoding="utf-8"))
+            result = audit_research_packet(packet)
+            write_json(args.output, result)
+            Path(args.output).with_suffix(".md").write_text(
+                render_research_audit_markdown(result), encoding="utf-8"
             )
             print(f"Checks: {result['checks_run']}")
             print(f"Findings: {result['finding_count']}")

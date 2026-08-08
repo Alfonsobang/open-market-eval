@@ -1,5 +1,14 @@
 # Roadmap
 
+## v0.6: Financial-search evidence gate
+
+- [x] Publish a strict A-share research-packet schema and synthetic controls.
+- [x] Add deterministic cutoff, citation, content-seal, primary-source, and deduplication checks.
+- [x] Ship CLI, CI, JSON/Markdown reports, and a local-first browser workbench.
+- [x] Document the Harbor 0.20.0 CP936 failure and verified Windows workaround.
+- [x] Convert the evidence audit into a Harbor task with a deterministic verifier.
+- [ ] Review five independently prepared, sanitized research packets.
+
 ## v0.5: Research quality gate
 
 - [x] Publish a machine-readable A-share backtest contract.

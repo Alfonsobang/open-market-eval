@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "open-market-eval"
-version = "0.5.0"
-description = "A-Share Agent Arena for reproducible backtest forensics and research evaluation"
+version = "0.6.0"
+description = "A-Share quality gates for backtests, financial-search evidence, and research agents"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 authors = [{name = "OpenMarketEval contributors"}]
-keywords = ["a-share", "finance", "agent-evaluation", "backtest", "harbor", "llm", "benchmark"]
+keywords = ["a-share", "finance", "agent-evaluation", "backtest", "financial-search", "harbor", "llm", "benchmark"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "License :: OSI Approved :: Apache Software License",

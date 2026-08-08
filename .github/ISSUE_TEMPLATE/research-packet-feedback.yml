@@ -1,0 +1,55 @@
+name: Research evidence audit feedback
+description: Report a false positive, missed risk, schema gap, or sanitized packet for the Evidence Audit beta.
+title: "[Evidence Audit]: "
+body:
+  - type: dropdown
+    id: feedback_type
+    attributes:
+      label: Feedback type
+      options:
+        - False positive
+        - Missed risk
+        - Schema or vocabulary gap
+        - Sanitized packet submission
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: OpenMarketEval version or commit
+      placeholder: v0.6.0 or commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: packet
+    attributes:
+      label: Minimal sanitized packet or public link
+      description: Remove strategy logic, credentials, account data, user data, licensed content, and non-public company information.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed result
+      description: Include finding codes and the command or browser state used.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result and rationale
+      description: Explain the financial-research control that should pass or fail.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety attestation
+      options:
+        - label: This report contains no private company data, real user data, credentials, or proprietary workflow details.
+          required: true
+        - label: I have the right to share every included excerpt, URL, and artifact.
+          required: true
+        - label: Any market example is a sanitized research fixture and not an investment recommendation.
+          required: true

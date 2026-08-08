@@ -1,0 +1,26 @@
+{
+  "schema_version": "0.1",
+  "packet_id": "synthetic-safe-packet",
+  "market": "cn_a_cash",
+  "query": "Synthetic fixture: what evidence was available by the declared cutoff?",
+  "as_of": "2025-04-30T15:00:00+08:00",
+  "evidence": [
+    {
+      "id": "evidence-1",
+      "title": "Synthetic primary-source fixture",
+      "publisher": "OpenMarketEval fixture",
+      "url": "https://example.invalid/synthetic-primary-source",
+      "published_at": "2025-04-30T11:30:00+08:00",
+      "retrieved_at": "2025-04-30T12:00:00+08:00",
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "is_primary": true
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-1",
+      "text": "The synthetic evidence item existed before the declared cutoff.",
+      "evidence_ids": ["evidence-1"]
+    }
+  ]
+}

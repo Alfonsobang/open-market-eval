@@ -1,0 +1,15 @@
+{
+  "packet_id": "search-001",
+  "findings": [
+    {
+      "code": "cutoff_violation",
+      "severity": "critical",
+      "evidence": "Evidence article-2 was published and retrieved after the declared 2025-04-30T15:00:00+08:00 cutoff."
+    },
+    {
+      "code": "unsupported_claim",
+      "severity": "critical",
+      "evidence": "Claim claim-2 cites missing-3, but that evidence ID does not exist in the packet."
+    }
+  ]
+}

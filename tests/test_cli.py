@@ -7,6 +7,46 @@ from pathlib import Path
 
 
 class CliTests(unittest.TestCase):
+    def test_research_packet_audit_writes_review_artifacts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "research-audit.json"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "open_market_eval",
+                    "audit-research-packet",
+                    "--packet",
+                    "examples/research-packets/leaky-packet.json",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertIn("Findings: 8", completed.stdout)
+            self.assertTrue(output.exists())
+            self.assertTrue(output.with_suffix(".md").exists())
+
+    def test_research_packet_strict_mode_blocks_findings(self):
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "open_market_eval",
+                "audit-research-packet",
+                "--packet",
+                "examples/research-packets/leaky-packet.json",
+                "--strict",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 1)
+
     def test_audit_spec_reports_real_contract_findings(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "preflight.json"

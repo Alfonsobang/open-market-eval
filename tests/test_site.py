@@ -56,6 +56,13 @@ class SiteTests(unittest.TestCase):
             self.assertTrue(
                 (Path(directory) / "data" / "a-share-backtest-cases.json").exists()
             )
+            research_audit = (Path(directory) / "research-audit.html").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("Audit the evidence before trusting the answer", research_audit)
+            self.assertIn("id=\"packet-input\"", research_audit)
+            self.assertIn("cutoff_violation", research_audit)
+            self.assertIn("No private company data", research_audit)
 
 
 if __name__ == "__main__":

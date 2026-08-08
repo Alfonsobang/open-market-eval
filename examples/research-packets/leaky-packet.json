@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1",
+  "packet_id": "synthetic-leaky-packet",
+  "market": "cn_a_cash",
+  "query": "Synthetic fixture: expose evidence-integrity failures",
+  "as_of": "2025-04-30T15:00:00+08:00",
+  "evidence": [
+    {
+      "id": "evidence-1",
+      "title": "Synthetic future evidence",
+      "publisher": "OpenMarketEval fixture",
+      "url": "https://example.invalid/duplicate-source",
+      "published_at": "2025-05-01T09:00:00+08:00",
+      "retrieved_at": "2025-04-29T10:00:00+08:00",
+      "content_sha256": "not-a-sha256",
+      "is_primary": false
+    },
+    {
+      "id": "evidence-2",
+      "title": "Synthetic duplicate evidence",
+      "publisher": "OpenMarketEval fixture",
+      "url": "https://example.invalid/duplicate-source/",
+      "published_at": "2025-04-29T09:00:00+08:00",
+      "retrieved_at": "2025-05-01T10:00:00+08:00",
+      "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "is_primary": false
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-1",
+      "text": "This synthetic claim has no citation.",
+      "evidence_ids": []
+    },
+    {
+      "id": "claim-2",
+      "text": "This synthetic claim cites an unknown item.",
+      "evidence_ids": ["evidence-404"]
+    }
+  ]
+}

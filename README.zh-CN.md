@@ -9,12 +9,13 @@
 
 **先审计回测，再相信收益；先测试 Agent，再相信研究结论。**
 
-OpenMarketEval 是面向 A 股研究的开源质量门禁与公共试验场。它首先解决两个可以落地的问题：
+OpenMarketEval 是面向 A 股研究的开源质量门禁与公共试验场。它首先提供三条可以落地的工作流：
 
 1. **Backtest Preflight / 回测体检：** 在浏览器或 CI 中检查 8 类 A 股研究设计风险，不需要上传策略代码和数据。
-2. **Backtest Forensics / 回测取证：** 让任意 Agent 挑战 10 个对抗场景，通过干净控制组和确定性评分器计算精确率、召回率、F1 与逐案命中率。
+2. **Evidence Audit / 证据审计：** 检查金融搜索证据包中的截止时点泄漏、断裂引用、可变证据、重复来源与一手来源缺失。
+3. **Backtest Forensics / 回测取证：** 让任意 Agent 挑战 10 个对抗场景，通过干净控制组和确定性评分器计算精确率、召回率、F1 与逐案命中率。
 
-[在线体检回测](https://alfonsobang.github.io/open-market-eval/#preflight) | [运行 Agent 挑战](benchmarks/a-share-backtest-forensics/README.md) | [English](README.md) | [Harbor 任务](integrations/harbor/a-share-backtest-audit/)
+[在线体检回测](https://alfonsobang.github.io/open-market-eval/#preflight) | [审计研究证据](https://alfonsobang.github.io/open-market-eval/research-audit.html) | [运行 Agent 挑战](benchmarks/a-share-backtest-forensics/README.md) | [English](README.md)
 
 ![A 股回测取证](docs/assets/a-share-arena-forensics.png)
 
@@ -41,6 +42,20 @@ python -m open_market_eval audit-spec \
 当前检查覆盖信号与成交时点、历史时点股票池、退市样本、可成交价格、T+1、停牌与涨跌停、交易成本以及财务数据修订。通过检查只表示已声明的配置没有触发这 8 类静态缺陷，并不代表代码、数据、收益或投资逻辑已经被验证。
 
 [参加 beta](docs/backtest-preflight-beta.md)，或通过[结构化表单反馈误报、漏报与合同表达缺口](https://github.com/Alfonsobang/open-market-eval/issues/new?template=preflight-feedback.yml)。
+
+## Research Evidence Audit / 研究证据审计
+
+先冻结金融搜索证据包，把每条主张连接到明确的证据 ID，再在进入评审前检查六类来源链路问题：
+
+```bash
+python -m open_market_eval audit-research-packet \
+  --packet examples/research-packets/leaky-packet.json \
+  --output runs/research-packet-audit.json
+```
+
+命令会生成 JSON 与 Markdown 报告。[浏览器工作台](https://alfonsobang.github.io/open-market-eval/research-audit.html)会在本地执行相同类别的检查，不上传证据包。详细方法与字段协议见[中文文档](docs/research-evidence-audit.zh-CN.md)。
+
+欢迎通过[证据审计 beta](docs/research-evidence-beta.md)提交误报、漏报、schema 缺口或经过脱敏的研究包。
 
 ## 首关：Backtest Forensics
 
@@ -166,10 +181,11 @@ python -m open_market_eval score \
 
 - **评测 harness：** 数据结构与时点完整性校验、封存、结算和评分。
 - **回测质量门禁：** 面向 A 股研究假设的 8 项合同检查，可在浏览器与 CI 中运行。
+- **研究证据门禁：** 面向金融搜索证据包的六类检查，覆盖截止时点、引用、内容封存、一手来源与去重。
 - **Smoke 评测集：** 6 个确定性的合成事件，覆盖权益、宏观、财报、监管、供应链和地缘事件。
 - **Agent 协议：** 无第三方依赖的 JSON-over-stdio runner，可接入任意语言和模型栈。
-- **可移植数据协议：** [`schemas/`](schemas/) 中包含问题、预测与结算的 JSON Schema。
-- **Harbor 任务：** [`integrations/harbor`](integrations/harbor/README.md) 中包含两个符合 schema 1.3 的任务，分别评测时点安全预测和 A 股回测审计，并配有确定性 verifier。
+- **可移植数据协议：** [`schemas/`](schemas/) 中包含问题、预测、结算、回测合同与研究证据包的 JSON Schema。
+- **Harbor 任务：** [`integrations/harbor`](integrations/harbor/README.md) 中包含三个符合 schema 1.3 的任务，分别评测时点安全预测、金融搜索证据与 A 股回测审计，并配有确定性 verifier。
 - **Codex skill：** [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md) 中包含可复用的预测工作流与输出协议。
 - **CI：** Python 3.10/3.12 测试、实时封存校验、skill 校验和 Markdown 链接检查。
 - **公开看板：** 无第三方前端依赖的 GitHub Pages 页面，展示实时截止时间和明确标注为合成数据的评分卡。

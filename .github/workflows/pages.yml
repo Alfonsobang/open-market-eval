@@ -23,6 +23,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m open_market_eval build-site --output site
+      - run: node tools/check_site_js.mjs site/index.html site/research-audit.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

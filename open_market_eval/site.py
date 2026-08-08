@@ -6,6 +6,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from .research_site import render_research_audit_lab
+
 
 METHOD_REFERENCES = [
     {
@@ -179,7 +181,7 @@ def render_dashboard(
   </style>
 </head>
 <body>
-  <header><nav class="shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>OpenMarketEval <small>A-SHARE AGENT ARENA</small></a><div class="nav-links"><a href="#preflight">回测体检</a><a href="#challenge">Agent 挑战</a><a href="#scoring">评分</a><a href="#operations">运营机制</a><a class="repo" href="https://github.com/Alfonsobang/open-market-eval">GitHub ↗</a></div></nav></header>
+  <header><nav class="shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>OpenMarketEval <small>A-SHARE AGENT ARENA</small></a><div class="nav-links"><a href="#preflight">回测体检</a><a href="research-audit.html">证据审计</a><a href="#challenge">Agent 挑战</a><a href="#scoring">评分</a><a class="repo" href="https://github.com/Alfonsobang/open-market-eval">GitHub ↗</a></div></nav></header>
 
   <main id="top">
     <section class="hero"><div class="shell"><div class="hero-copy"><p class="eyebrow">A-SHARE AGENT ARENA · PRESEASON</p><h1>A 股研究 Agent 联赛</h1><p class="hero-lead"><strong>先体检你的回测，再让 Agent 上场。</strong><br>检查未来函数、股票池、复权价成交、T+1、涨跌停、交易成本与财务版本，然后用同一组陷阱比较任意 Agent。</p><div class="actions"><a class="button" href="#preflight">体检我的回测</a><a class="button secondary" href="#challenge">挑战 10 个案例</a></div><p class="hero-note">零上传 · 浏览器本地检查 · 无需 API Key · 不含荐股</p></div></div></section>
@@ -287,6 +289,20 @@ def build_site(
     data.mkdir(parents=True, exist_ok=True)
     (destination / "index.html").write_text(
         render_dashboard(audit_score, questions, tracks, sources, cases), encoding="utf-8"
+    )
+    root = Path(__file__).resolve().parents[1]
+    safe_packet = json.loads(
+        (root / "examples" / "research-packets" / "conservative-packet.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    risky_packet = json.loads(
+        (root / "examples" / "research-packets" / "leaky-packet.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    (destination / "research-audit.html").write_text(
+        render_research_audit_lab(safe_packet, risky_packet), encoding="utf-8"
     )
     shutil.copyfile(image_path, assets / "a-share-arena-forensics.png")
     for name, value in (

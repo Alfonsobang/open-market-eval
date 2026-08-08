@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1",
+  "packet_id": "search-001",
+  "market": "cn_a_cash",
+  "query": "Synthetic evaluation fixture: which claims were supportable at the cutoff?",
+  "as_of": "2025-04-30T15:00:00+08:00",
+  "evidence": [
+    {
+      "id": "filing-1",
+      "title": "Synthetic primary-source filing",
+      "publisher": "OpenMarketEval fixture",
+      "url": "https://example.invalid/filing-1",
+      "published_at": "2025-04-30T11:30:00+08:00",
+      "retrieved_at": "2025-04-30T12:00:00+08:00",
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "is_primary": true
+    },
+    {
+      "id": "article-2",
+      "title": "Synthetic post-cutoff article",
+      "publisher": "OpenMarketEval fixture",
+      "url": "https://example.invalid/article-2",
+      "published_at": "2025-04-30T16:30:00+08:00",
+      "retrieved_at": "2025-04-30T16:45:00+08:00",
+      "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "is_primary": false
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-1",
+      "text": "The synthetic primary-source item existed before the cutoff.",
+      "evidence_ids": ["filing-1"]
+    },
+    {
+      "id": "claim-2",
+      "text": "This synthetic claim cites evidence that is not in the packet.",
+      "evidence_ids": ["missing-3"]
+    }
+  ]
+}

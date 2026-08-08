@@ -9,12 +9,13 @@
 
 **Audit the backtest before trusting the return. Audit the Agent before trusting the research.**
 
-OpenMarketEval is an open quality gate and public test arena for A-share research. It gives practitioners two things they can use today:
+OpenMarketEval is an open quality gate and public test arena for A-share research. It gives practitioners three workflows they can use today:
 
 1. **Backtest Preflight:** inspect eight A-share research-design risks in the browser or CI, without uploading strategy code or data.
-2. **Backtest Forensics:** run any Agent against 10 adversarial cases with clean controls and deterministic precision, recall, F1, and exact-case scoring.
+2. **Evidence Audit:** inspect financial-search packets for cutoff leakage, broken citations, mutable evidence, duplicate sources, and missing primary sources.
+3. **Backtest Forensics:** run any Agent against 10 adversarial cases with clean controls and deterministic precision, recall, F1, and exact-case scoring.
 
-[Audit a backtest in your browser](https://alfonsobang.github.io/open-market-eval/#preflight) | [Run the Agent challenge](benchmarks/a-share-backtest-forensics/README.md) | [中文文档](README.zh-CN.md) | [Harbor task](integrations/harbor/a-share-backtest-audit/)
+[Audit a backtest](https://alfonsobang.github.io/open-market-eval/#preflight) | [Audit research evidence](https://alfonsobang.github.io/open-market-eval/research-audit.html) | [Run the Agent challenge](benchmarks/a-share-backtest-forensics/README.md) | [中文文档](README.zh-CN.md)
 
 ![A-share backtest forensics](docs/assets/a-share-arena-forensics.png)
 
@@ -41,6 +42,20 @@ python -m open_market_eval audit-spec \
 The current checks cover signal/fill timing, point-in-time universes, delisted names, executable prices, T+1 settlement, suspensions and price limits, transaction costs, and fundamental-data revisions. A pass means only that the declared configuration avoided these static defects; it does not validate code, data, returns, or investment merit.
 
 [Join the beta](docs/backtest-preflight-beta.md) or [report a false positive, missed risk, or vocabulary gap](https://github.com/Alfonsobang/open-market-eval/issues/new?template=preflight-feedback.yml).
+
+## Research Evidence Audit
+
+Freeze a financial-search packet, connect every claim to evidence IDs, then inspect six provenance failures before review:
+
+```bash
+python -m open_market_eval audit-research-packet \
+  --packet examples/research-packets/leaky-packet.json \
+  --output runs/research-packet-audit.json
+```
+
+The command writes JSON and Markdown reports. The [browser workbench](https://alfonsobang.github.io/open-market-eval/research-audit.html) performs the same failure-class checks locally without uploading the packet. Read the [method and packet contract](docs/research-evidence-audit.md).
+
+[Join the evidence-audit beta](docs/research-evidence-beta.md) with a false positive, missed risk, schema gap, or sanitized packet.
 
 ## Challenge 0: Backtest Forensics
 
@@ -166,10 +181,11 @@ python -m open_market_eval score \
 
 - **Evaluation harness:** schema and temporal-integrity validation, sealing, resolution, and scoring.
 - **Backtest quality gate:** an eight-check contract linter for A-share research assumptions, with browser and CI entry points.
+- **Research evidence gate:** a six-class financial-search packet audit for cutoffs, citations, source seals, primary evidence, and deduplication.
 - **Smoke benchmark:** six deterministic synthetic events spanning equities, macro, earnings, regulation, supply chains, and geopolitics.
 - **Agent contract:** dependency-free JSON-over-stdio runner for any language or model stack.
-- **Portable schemas:** JSON Schema contracts for questions, forecasts, and resolutions in [`schemas/`](schemas/).
-- **Harbor tasks:** two schema 1.3 tasks for time-safe forecasting and A-share backtest audit, with deterministic verifiers in [`integrations/harbor`](integrations/harbor/README.md).
+- **Portable schemas:** JSON Schema contracts for questions, forecasts, resolutions, backtests, and evidence packets in [`schemas/`](schemas/).
+- **Harbor tasks:** three schema 1.3 tasks for time-safe forecasting, financial-search evidence, and A-share backtest audit, with deterministic verifiers in [`integrations/harbor`](integrations/harbor/README.md).
 - **Codex skill:** reusable workflow and output contract in [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md).
 - **CI:** tests on Python 3.10 and 3.12, live-seal verification, skill validation, and Markdown link checks.
 - **Public dashboard:** a dependency-free static Pages build with live deadlines and a clearly labeled synthetic scorecard.

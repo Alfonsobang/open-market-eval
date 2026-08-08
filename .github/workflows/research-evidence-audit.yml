@@ -1,0 +1,49 @@
+name: Research evidence audit
+
+on:
+  pull_request:
+    paths:
+      - "open_market_eval/retrieval.py"
+      - "open_market_eval/cli.py"
+      - "schemas/research-packet.schema.json"
+      - "examples/research-packets/**"
+      - "tests/test_retrieval.py"
+      - ".github/workflows/research-evidence-audit.yml"
+  push:
+    branches: [main]
+    paths:
+      - "open_market_eval/retrieval.py"
+      - "open_market_eval/cli.py"
+      - "schemas/research-packet.schema.json"
+      - "examples/research-packets/**"
+      - "tests/test_retrieval.py"
+      - ".github/workflows/research-evidence-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-packets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest tests.test_retrieval -v
+      - name: Require the conservative packet to pass
+        run: >-
+          python -m open_market_eval audit-research-packet
+          --packet examples/research-packets/conservative-packet.json
+          --output runs/research-safe.json
+          --strict
+      - name: Verify the leaky packet exposes findings
+        run: >-
+          python -m open_market_eval audit-research-packet
+          --packet examples/research-packets/leaky-packet.json
+          --output runs/research-leaky.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: research-evidence-audit-reports
+          path: runs/research-*.json
