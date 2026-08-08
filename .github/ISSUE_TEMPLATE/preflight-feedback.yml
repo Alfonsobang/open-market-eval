@@ -1,0 +1,74 @@
+name: Backtest Preflight feedback
+description: Report a false positive, missed risk, or contract vocabulary gap.
+title: "[Preflight feedback]: "
+labels: ["a-share-lab", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help improve the A-share research-design contract without exposing a strategy. Do not submit market data, positions, returns, private research, credentials, real user data, or proprietary workflows.
+  - type: input
+    id: setup
+    attributes:
+      label: Sanitized research setup type
+      description: Describe only the broad workflow category.
+      placeholder: Daily cross-sectional, index rotation, intraday signal, or another public abstraction
+    validations:
+      required: true
+  - type: dropdown
+    id: feedback_type
+    attributes:
+      label: Feedback type
+      options:
+        - False positive
+        - Missed risk
+        - Contract vocabulary gap
+        - Repair text improvement
+        - Correct result confirmation
+    validations:
+      required: true
+  - type: dropdown
+    id: finding_code
+    attributes:
+      label: Closest finding code
+      options:
+        - Not represented by a current code
+        - same_close_execution
+        - current_universe_projection
+        - delisting_survivorship
+        - adjusted_price_execution
+        - t_plus_one_violation
+        - tradability_constraints_ignored
+        - transaction_costs_omitted
+        - revision_leakage
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Sanitized backtest contract
+      description: Optional. Include only a contract safe for permanent public disclosure.
+      render: json
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed and expected behavior
+      description: State what the checker reported, what it should report, and why.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: OpenMarketEval version or commit
+      placeholder: v0.5.0 or a commit SHA
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Public-data and claim boundary
+      options:
+        - label: I have removed strategy code, market data, positions, returns, credentials, private research, real user data, and proprietary workflows.
+          required: true
+        - label: I understand that preflight output is a static research-quality diagnostic, not investment advice or evidence of performance.
+          required: true

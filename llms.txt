@@ -16,6 +16,8 @@
 - Current challenge cases: benchmarks/a-share-backtest-forensics/cases.jsonl
 - Backtest contract schema: schemas/backtest-contract.schema.json
 - Backtest contract examples: examples/backtests/
+- Backtest Preflight beta: docs/backtest-preflight-beta.md
+- Structured preflight feedback: .github/ISSUE_TEMPLATE/preflight-feedback.yml
 - Audit Agent adapter: docs/audit-agent-adapter.md
 - Harbor A-share audit task: integrations/harbor/a-share-backtest-audit/
 - Arena operating system: docs/arena-operating-system.zh-CN.md

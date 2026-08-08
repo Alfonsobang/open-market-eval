@@ -40,6 +40,8 @@ python -m open_market_eval audit-spec \
 
 当前检查覆盖信号与成交时点、历史时点股票池、退市样本、可成交价格、T+1、停牌与涨跌停、交易成本以及财务数据修订。通过检查只表示已声明的配置没有触发这 8 类静态缺陷，并不代表代码、数据、收益或投资逻辑已经被验证。
 
+[参加 beta](docs/backtest-preflight-beta.md)，或通过[结构化表单反馈误报、漏报与合同表达缺口](https://github.com/Alfonsobang/open-market-eval/issues/new?template=preflight-feedback.yml)。
+
 ## 首关：Backtest Forensics
 
 | 验证什么 | 典型错误 | 评分信号 |

@@ -40,6 +40,8 @@ python -m open_market_eval audit-spec \
 
 The current checks cover signal/fill timing, point-in-time universes, delisted names, executable prices, T+1 settlement, suspensions and price limits, transaction costs, and fundamental-data revisions. A pass means only that the declared configuration avoided these static defects; it does not validate code, data, returns, or investment merit.
 
+[Join the beta](docs/backtest-preflight-beta.md) or [report a false positive, missed risk, or vocabulary gap](https://github.com/Alfonsobang/open-market-eval/issues/new?template=preflight-feedback.yml).
+
 ## Challenge 0: Backtest Forensics
 
 | What is tested | Example failure | Score signal |

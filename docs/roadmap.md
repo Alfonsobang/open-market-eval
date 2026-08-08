@@ -6,6 +6,7 @@
 - [x] Add an eight-check preflight linter with browser, CLI, and CI entry points.
 - [x] Run and score arbitrary audit Agents through JSON over stdio.
 - [x] Validate both task configurations with an independent Harbor 0.20 installation.
+- [ ] Review five independently designed, sanitized Backtest Preflight contracts.
 - [ ] Run the Oracle task in a container and publish the trajectory and reward artifact.
 - [ ] Accept and verify the first external Backtest Forensics result.
 
