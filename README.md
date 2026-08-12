@@ -9,13 +9,14 @@
 
 **Audit the backtest before trusting the return. Audit the Agent before trusting the research.**
 
-OpenMarketEval is an open quality gate and public test arena for A-share research. It gives practitioners three workflows they can use today:
+OpenMarketEval is an open quality gate and public test arena for A-share research. It gives practitioners four workflows they can run today:
 
 1. **Backtest Preflight:** inspect eight A-share research-design risks in the browser or CI, without uploading strategy code or data.
 2. **Evidence Audit:** inspect financial-search packets for cutoff leakage, broken citations, mutable evidence, duplicate sources, and missing primary sources.
-3. **Backtest Forensics:** run any Agent against 10 adversarial cases with clean controls and deterministic precision, recall, F1, and exact-case scoring.
+3. **Point-in-Time Filing QA:** test extraction, units, normalization, page citations, and source provenance on 10 facts from five official A-share annual reports.
+4. **Backtest Forensics:** run any Agent against 10 adversarial cases with clean controls and deterministic precision, recall, F1, and exact-case scoring.
 
-[Audit a backtest](https://alfonsobang.github.io/open-market-eval/#preflight) | [Audit research evidence](https://alfonsobang.github.io/open-market-eval/research-audit.html) | [Run the Agent challenge](benchmarks/a-share-backtest-forensics/README.md) | [中文文档](README.zh-CN.md)
+[Audit a backtest](https://alfonsobang.github.io/open-market-eval/#preflight) | [Audit research evidence](https://alfonsobang.github.io/open-market-eval/research-audit.html) | [Run filing QA](https://alfonsobang.github.io/open-market-eval/filing-qa.html) | [Run the Agent challenge](benchmarks/a-share-backtest-forensics/README.md) | [中文文档](README.zh-CN.md)
 
 ![A-share backtest forensics](docs/assets/a-share-arena-forensics.png)
 
@@ -28,7 +29,7 @@ python -m open_market_eval audit-spec \
   --output runs/my-preflight.json
 ```
 
-`doctor` verifies all five bundled integrity paths offline: the forecast loop, backtest gate, evidence gate, three Harbor tasks, and the live-round seal. CI publishes its machine-readable output as the `project-integrity-report` artifact. The audit command then produces JSON and a review-ready Markdown report. The included risky contract triggers all eight checks; the conservative contract passes. Neither fixture contains a strategy, market data, or performance claim.
+`doctor` verifies all six bundled integrity paths offline: the forecast loop, backtest gate, evidence gate, point-in-time QA pack, four Harbor tasks, and the live-round seal. CI publishes its machine-readable output as the `project-integrity-report` artifact. The audit command then produces JSON and a review-ready Markdown report. The included risky contract triggers all eight checks; the conservative contract passes. Neither fixture contains a strategy, market data, or performance claim.
 
 ## Backtest Preflight
 
@@ -57,6 +58,18 @@ python -m open_market_eval audit-research-packet \
 The command writes JSON and Markdown reports. The [browser workbench](https://alfonsobang.github.io/open-market-eval/research-audit.html) performs the same failure-class checks locally without uploading the packet. Read the [method and packet contract](docs/research-evidence-audit.md).
 
 [Join the evidence-audit beta](docs/research-evidence-beta.md) with a false positive, missed risk, schema gap, or sanitized packet.
+
+## Point-in-Time Filing QA
+
+Financial agents routinely fail on details that look trivial: the wrong report version, a unit scaled by 1,000, a parent-company number substituted for the consolidated figure, or a citation to the printed page instead of the physical PDF page. The public development pack turns those failures into an exact contract:
+
+```bash
+python -m open_market_eval score-fact-qa \
+  --submission path/to/fact-answers.jsonl \
+  --output runs/fact-qa-scorecard.json
+```
+
+The pack contains 10 tasks from five official 2024 annual reports, with source URLs, publication cutoffs, byte lengths, SHA-256 digests, public labels, and field-level diagnostics. PDFs are linked, not redistributed. Use the [browser lab](https://alfonsobang.github.io/open-market-eval/filing-qa.html), read the [benchmark card](benchmarks/a-share-point-in-time-qa/README.md), run the [Harbor task](integrations/harbor/a-share-point-in-time-qa), or [challenge a label with public evidence](https://github.com/Alfonsobang/open-market-eval/issues/new?template=fact-qa-feedback.yml).
 
 ## Challenge 0: Backtest Forensics
 
@@ -183,10 +196,11 @@ python -m open_market_eval score \
 - **Evaluation harness:** schema and temporal-integrity validation, sealing, resolution, and scoring.
 - **Backtest quality gate:** an eight-check contract linter for A-share research assumptions, with browser and CI entry points.
 - **Research evidence gate:** a six-class financial-search packet audit for cutoffs, citations, source seals, primary evidence, and deduplication.
+- **Point-in-time filing QA:** 10 public facts from five official annual reports, scored for values, units, normalization, periods, scopes, PDF pages, and source IDs.
 - **Smoke benchmark:** six deterministic synthetic events spanning equities, macro, earnings, regulation, supply chains, and geopolitics.
 - **Agent contract:** dependency-free JSON-over-stdio runner for any language or model stack.
 - **Portable schemas:** JSON Schema contracts for questions, forecasts, resolutions, backtests, and evidence packets in [`schemas/`](schemas/).
-- **Harbor tasks:** three schema 1.3 tasks for time-safe forecasting, financial-search evidence, and A-share backtest audit, with deterministic verifiers in [`integrations/harbor`](integrations/harbor/README.md).
+- **Harbor tasks:** four schema 1.3 tasks for time-safe forecasting, point-in-time filing QA, financial-search evidence, and A-share backtest audit, with deterministic verifiers in [`integrations/harbor`](integrations/harbor/README.md).
 - **Codex skill:** reusable workflow and output contract in [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md).
 - **CI:** tests on Python 3.10 and 3.12, live-seal verification, skill validation, and Markdown link checks.
 - **Public dashboard:** a dependency-free static Pages build with live deadlines and a clearly labeled synthetic scorecard.

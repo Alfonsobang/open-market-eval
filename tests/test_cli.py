@@ -7,6 +7,32 @@ from pathlib import Path
 
 
 class CliTests(unittest.TestCase):
+    def test_fact_qa_score_writes_field_diagnostics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "fact-qa.json"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "open_market_eval",
+                    "score-fact-qa",
+                    "--submission",
+                    "benchmarks/a-share-point-in-time-qa/labels.jsonl",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(
+                completed.returncode, 0, completed.stdout + completed.stderr
+            )
+            self.assertIn("Tasks: 10", completed.stdout)
+            self.assertIn("Exact task accuracy: 100.0%", completed.stdout)
+            self.assertTrue(output.exists())
+            self.assertTrue(output.with_suffix(".md").exists())
+
     def test_doctor_verifies_all_public_integrity_paths(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "doctor.json"
@@ -23,8 +49,10 @@ class CliTests(unittest.TestCase):
                 capture_output=True,
                 check=False,
             )
-            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
-            self.assertIn("Ready: 5/5 integrity paths passed", completed.stdout)
+            self.assertEqual(
+                completed.returncode, 0, completed.stdout + completed.stderr
+            )
+            self.assertIn("Ready: 6/6 integrity paths passed", completed.stdout)
             report = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(report["status"], "ready")
             self.assertEqual(
@@ -33,6 +61,7 @@ class CliTests(unittest.TestCase):
                     "forecast-loop",
                     "backtest-preflight",
                     "evidence-audit",
+                    "point-in-time-qa",
                     "harbor-tasks",
                     "live-round-seal",
                 ],
@@ -56,7 +85,9 @@ class CliTests(unittest.TestCase):
                 capture_output=True,
                 check=False,
             )
-            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertEqual(
+                completed.returncode, 0, completed.stdout + completed.stderr
+            )
             self.assertIn("Findings: 8", completed.stdout)
             self.assertTrue(output.exists())
             self.assertTrue(output.with_suffix(".md").exists())
@@ -96,7 +127,9 @@ class CliTests(unittest.TestCase):
                 capture_output=True,
                 check=False,
             )
-            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertEqual(
+                completed.returncode, 0, completed.stdout + completed.stderr
+            )
             self.assertIn("Findings: 8", completed.stdout)
             self.assertTrue(output.exists())
             self.assertTrue(output.with_suffix(".md").exists())
@@ -133,7 +166,9 @@ class CliTests(unittest.TestCase):
                 capture_output=True,
                 check=False,
             )
-            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertEqual(
+                completed.returncode, 0, completed.stdout + completed.stderr
+            )
             self.assertTrue((Path(directory) / "scorecard.json").exists())
             self.assertTrue((Path(directory) / "scorecard.md").exists())
             self.assertIn("10 A-share backtest audit cases", completed.stdout)
@@ -157,7 +192,9 @@ class CliTests(unittest.TestCase):
                 capture_output=True,
                 check=False,
             )
-            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertEqual(
+                completed.returncode, 0, completed.stdout + completed.stderr
+            )
             self.assertIn("Scored 10 cases", completed.stdout)
             self.assertTrue((Path(directory) / "audit_report.jsonl").exists())
             self.assertTrue((Path(directory) / "scorecard.json").exists())
@@ -168,12 +205,21 @@ class CliTests(unittest.TestCase):
     def test_demo_builds_scorecard(self):
         with tempfile.TemporaryDirectory() as directory:
             completed = subprocess.run(
-                [sys.executable, "-m", "open_market_eval", "demo", "--output", directory],
+                [
+                    sys.executable,
+                    "-m",
+                    "open_market_eval",
+                    "demo",
+                    "--output",
+                    directory,
+                ],
                 text=True,
                 capture_output=True,
                 check=False,
             )
-            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertEqual(
+                completed.returncode, 0, completed.stdout + completed.stderr
+            )
             self.assertTrue((Path(directory) / "seal.json").exists())
             self.assertTrue((Path(directory) / "scorecard.md").exists())
             self.assertIn("Mean Brier", completed.stdout)

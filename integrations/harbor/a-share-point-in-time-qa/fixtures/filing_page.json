@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.1",
+  "task_id": "pit-300750-revenue-2024",
+  "question": "What operating revenue did CATL report for fiscal 2024?",
+  "security_code": "300750",
+  "company_name_zh": "宁德时代新能源科技股份有限公司",
+  "period": "2024",
+  "scope": "listed_company_consolidated",
+  "source": {
+    "id": "cninfo-300750-2024-annual",
+    "publisher": "CNINFO",
+    "published_date": "2025-03-15",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-03-15/1222806982.PDF",
+    "content_sha256": "b4f1713d7b821eb076c102711d177fe942ccc2bc8dd171ae5d7a95799a65b0ad",
+    "pdf_page": 9
+  },
+  "table": {
+    "name": "主要会计数据和财务指标",
+    "declared_unit": "CNY_THOUSAND",
+    "rows": [
+      {
+        "field": "operating_revenue",
+        "2024": "362012554",
+        "2023": "400917045",
+        "year_over_year": "-9.70%"
+      }
+    ]
+  },
+  "normalization": {
+    "CNY_THOUSAND_to_CNY_YUAN": "multiply by 1000"
+  },
+  "rights_note": "Frozen factual metadata only; the annual-report PDF is linked and not redistributed."
+}

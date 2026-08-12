@@ -27,9 +27,10 @@ jobs:
           path: runs/doctor.json
       - run: python -m open_market_eval demo --output runs/demo
       - run: python -m open_market_eval build-site --output site
-      - run: node tools/check_site_js.mjs site/index.html site/research-audit.html
+      - run: node tools/check_site_js.mjs site/index.html site/research-audit.html site/filing-qa.html
       - run: python -m unittest discover -s integrations/harbor/market-forecast/tests -v
       - run: python -m unittest discover -s integrations/harbor/a-share-backtest-audit/tests -v
+      - run: python -m unittest discover -s integrations/harbor/a-share-point-in-time-qa/tests -v
       - run: python -m unittest discover -s integrations/harbor/a-share-research-evidence/tests -v
 
   skill:

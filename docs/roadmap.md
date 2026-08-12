@@ -1,5 +1,13 @@
 # Roadmap
 
+## v0.7: Point-in-time filing QA
+
+- [x] Publish 10 source-backed tasks across five 2024 A-share annual reports.
+- [x] Record official CNINFO URLs, publication dates, byte lengths, and SHA-256 digests without redistributing PDFs.
+- [x] Score raw values, declared units, normalized yuan values, periods, scopes, physical PDF pages, and source IDs deterministically.
+- [x] Ship a fourth no-network Harbor task and cross-check its fixture against the public benchmark.
+- [ ] Add independently reviewed labels for a second reporting period and five more issuers.
+
 ## v0.6: Financial-search evidence gate
 
 - [x] Publish a strict A-share research-packet schema and synthetic controls.
@@ -34,8 +42,8 @@
 - [x] Publish a machine-readable public-source registry.
 - [x] Launch the Chinese-first interactive experiment workbench.
 - [x] Add CLI discovery with `list-tracks` and `show-track`.
-- [ ] Publish the first 10 filing-search and point-in-time QA tasks with frozen evidence.
-- [ ] Add deterministic verifiers for citation support, unit normalization, and report-version alignment.
+- [x] Publish the first 10 point-in-time QA tasks with frozen evidence.
+- [x] Add deterministic verifiers for unit normalization and report-version alignment.
 
 ## Next: sealed backtest audit challenge
 

@@ -56,6 +56,9 @@ class SiteTests(unittest.TestCase):
             self.assertTrue(
                 (Path(directory) / "data" / "a-share-backtest-cases.json").exists()
             )
+            self.assertTrue((Path(directory) / "data" / "fact-qa-tasks.jsonl").exists())
+            self.assertTrue((Path(directory) / "data" / "fact-qa-labels.jsonl").exists())
+            self.assertTrue((Path(directory) / "data" / "fact-qa-sources.json").exists())
             research_audit = (Path(directory) / "research-audit.html").read_text(
                 encoding="utf-8"
             )
@@ -63,6 +66,12 @@ class SiteTests(unittest.TestCase):
             self.assertIn("id=\"packet-input\"", research_audit)
             self.assertIn("cutoff_violation", research_audit)
             self.assertIn("No private company data", research_audit)
+            fact_qa = (Path(directory) / "filing-qa.html").read_text(encoding="utf-8")
+            self.assertIn("A 股年报时点查数实验室", fact_qa)
+            self.assertIn('id="check-answer"', fact_qa)
+            self.assertIn("pit-300750-revenue-2024", fact_qa)
+            self.assertIn("b4f1713d7b821eb076c102711d177fe9", fact_qa)
+            self.assertEqual(fact_qa.count('data-task="'), 10)
 
 
 if __name__ == "__main__":

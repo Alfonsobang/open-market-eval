@@ -8,6 +8,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .audit import render_audit_markdown, score_audit_submission
+from .fact_qa import (
+    render_fact_qa_markdown,
+    score_fact_qa_submission,
+    validate_fact_qa_pack,
+)
 from .harness import run_agent, run_audit_agent
 from .io import read_jsonl, write_json, write_jsonl
 from .ledger import seal_files, verify_seal
@@ -171,9 +176,26 @@ def command_doctor(root: Path, output: Path | None = None) -> None:
         }
     )
 
+    fact_root = root / "benchmarks" / "a-share-point-in-time-qa"
+    fact_summary = validate_fact_qa_pack(
+        read_jsonl(fact_root / "tasks.jsonl"),
+        read_jsonl(fact_root / "labels.jsonl"),
+        json.loads((fact_root / "sources.json").read_text(encoding="utf-8")),
+    )
+    checks.append(
+        {
+            "id": "point-in-time-qa",
+            "detail": (
+                f"{fact_summary['task_count']} tasks and "
+                f"{fact_summary['source_count']} primary sources validated"
+            ),
+        }
+    )
+
     harbor_root = root / "integrations" / "harbor"
     task_names = (
         "a-share-backtest-audit",
+        "a-share-point-in-time-qa",
         "a-share-research-evidence",
         "market-forecast",
     )
@@ -252,6 +274,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--labels", default="benchmarks/a-share-backtest-forensics/labels.jsonl"
     )
     audit_score.add_argument("--output", default="runs/audit-scorecard.json")
+    fact_score = subparsers.add_parser(
+        "score-fact-qa", help="score an A-share point-in-time fact QA submission"
+    )
+    fact_score.add_argument("--submission", required=True)
+    fact_score.add_argument(
+        "--labels", default="benchmarks/a-share-point-in-time-qa/labels.jsonl"
+    )
+    fact_score.add_argument("--output", default="runs/fact-qa-scorecard.json")
     audit_agent = subparsers.add_parser(
         "run-audit-agent",
         help="run and score any JSON-over-stdio agent on Backtest Forensics",
@@ -340,6 +370,18 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Precision: {result['precision']:.1%}")
             print(f"Recall: {result['recall']:.1%}")
             print(f"F1: {result['f1']:.1%}")
+        elif args.action == "score-fact-qa":
+            result = score_fact_qa_submission(
+                read_jsonl(args.submission), read_jsonl(args.labels)
+            )
+            write_json(args.output, result)
+            Path(args.output).with_suffix(".md").write_text(
+                render_fact_qa_markdown(result), encoding="utf-8"
+            )
+            print(f"Tasks: {result['task_count']}")
+            print(f"Exact task accuracy: {result['exact_task_accuracy']:.1%}")
+            print(f"Mean field accuracy: {result['mean_field_accuracy']:.1%}")
+            print(f"Report: {Path(args.output).with_suffix('.md')}")
         elif args.action == "run-audit-agent":
             args.output_dir.mkdir(parents=True, exist_ok=True)
             submission = run_audit_agent(args.command, read_jsonl(args.cases))

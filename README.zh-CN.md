@@ -9,13 +9,14 @@
 
 **先审计回测，再相信收益；先测试 Agent，再相信研究结论。**
 
-OpenMarketEval 是面向 A 股研究的开源质量门禁与公共试验场。它首先提供三条可以落地的工作流：
+OpenMarketEval 是面向 A 股研究的开源质量门禁与公共试验场。它首先提供四条可以直接运行的工作流：
 
 1. **Backtest Preflight / 回测体检：** 在浏览器或 CI 中检查 8 类 A 股研究设计风险，不需要上传策略代码和数据。
 2. **Evidence Audit / 证据审计：** 检查金融搜索证据包中的截止时点泄漏、断裂引用、可变证据、重复来源与一手来源缺失。
-3. **Backtest Forensics / 回测取证：** 让任意 Agent 挑战 10 个对抗场景，通过干净控制组和确定性评分器计算精确率、召回率、F1 与逐案命中率。
+3. **Point-in-Time Filing QA / 时点查数：** 用 5 份 A 股官方年报中的 10 个事实，测试数值提取、单位、归一化、页码引用与来源追溯。
+4. **Backtest Forensics / 回测取证：** 让任意 Agent 挑战 10 个对抗场景，通过干净控制组和确定性评分器计算精确率、召回率、F1 与逐案命中率。
 
-[在线体检回测](https://alfonsobang.github.io/open-market-eval/#preflight) | [审计研究证据](https://alfonsobang.github.io/open-market-eval/research-audit.html) | [运行 Agent 挑战](benchmarks/a-share-backtest-forensics/README.md) | [English](README.md)
+[在线体检回测](https://alfonsobang.github.io/open-market-eval/#preflight) | [审计研究证据](https://alfonsobang.github.io/open-market-eval/research-audit.html) | [运行时点查数](https://alfonsobang.github.io/open-market-eval/filing-qa.html) | [运行 Agent 挑战](benchmarks/a-share-backtest-forensics/README.md) | [English](README.md)
 
 ![A 股回测取证](docs/assets/a-share-arena-forensics.png)
 
@@ -28,7 +29,7 @@ python -m open_market_eval audit-spec \
   --output runs/my-preflight.json
 ```
 
-`doctor` 会离线验证五条内置完整性路径：预测闭环、回测门禁、证据门禁、三项 Harbor 任务以及实时轮次封存。CI 会把机器可读结果发布为 `project-integrity-report` 构建产物。随后，审计命令会生成 JSON 和便于评审的 Markdown 报告。高风险样例会触发全部 8 项检查，保守样例可以通过。两个样例均不包含策略、行情数据或收益声明。
+`doctor` 会离线验证六条内置完整性路径：预测闭环、回测门禁、证据门禁、时点查数开发集、四项 Harbor 任务以及实时轮次封存。CI 会把机器可读结果发布为 `project-integrity-report` 构建产物。随后，审计命令会生成 JSON 和便于评审的 Markdown 报告。高风险样例会触发全部 8 项检查，保守样例可以通过。两个样例均不包含策略、行情数据或收益声明。
 
 ## Backtest Preflight / 回测体检
 
@@ -57,6 +58,18 @@ python -m open_market_eval audit-research-packet \
 命令会生成 JSON 与 Markdown 报告。[浏览器工作台](https://alfonsobang.github.io/open-market-eval/research-audit.html)会在本地执行相同类别的检查，不上传证据包。详细方法与字段协议见[中文文档](docs/research-evidence-audit.zh-CN.md)。
 
 欢迎通过[证据审计 beta](docs/research-evidence-beta.md)提交误报、漏报、schema 缺口或经过脱敏的研究包。
+
+## Point-in-Time Filing QA / 时点查数
+
+金融 Agent 经常在看似简单的细节上失败：使用错误版本的报告、把单位放大或缩小 1,000 倍、用母公司口径替代合并口径，或者把报告印刷页码误当成 PDF 物理页码。公开开发集把这些问题变成可以精确评分的输出协议：
+
+```bash
+python -m open_market_eval score-fact-qa \
+  --submission path/to/fact-answers.jsonl \
+  --output runs/fact-qa-scorecard.json
+```
+
+开发集包含 5 份官方 2024 年年度报告中的 10 道任务，并记录来源链接、公告截止日期、文件字节数、SHA-256、公开标签与逐字段诊断。PDF 只提供链接，不在仓库中再次分发。可使用[浏览器实验室](https://alfonsobang.github.io/open-market-eval/filing-qa.html)、阅读[中文评测卡](benchmarks/a-share-point-in-time-qa/README.zh-CN.md)、运行 [Harbor 任务](integrations/harbor/a-share-point-in-time-qa)，或用公开证据[挑战现有标签](https://github.com/Alfonsobang/open-market-eval/issues/new?template=fact-qa-feedback.yml)。
 
 ## 首关：Backtest Forensics
 
@@ -183,10 +196,11 @@ python -m open_market_eval score \
 - **评测 harness：** 数据结构与时点完整性校验、封存、结算和评分。
 - **回测质量门禁：** 面向 A 股研究假设的 8 项合同检查，可在浏览器与 CI 中运行。
 - **研究证据门禁：** 面向金融搜索证据包的六类检查，覆盖截止时点、引用、内容封存、一手来源与去重。
+- **时点查数开发集：** 5 份官方年报中的 10 个公开事实，逐项评分数值、单位、归一化、期间、口径、PDF 页码与来源 ID。
 - **Smoke 评测集：** 6 个确定性的合成事件，覆盖权益、宏观、财报、监管、供应链和地缘事件。
 - **Agent 协议：** 无第三方依赖的 JSON-over-stdio runner，可接入任意语言和模型栈。
 - **可移植数据协议：** [`schemas/`](schemas/) 中包含问题、预测、结算、回测合同与研究证据包的 JSON Schema。
-- **Harbor 任务：** [`integrations/harbor`](integrations/harbor/README.md) 中包含三个符合 schema 1.3 的任务，分别评测时点安全预测、金融搜索证据与 A 股回测审计，并配有确定性 verifier。
+- **Harbor 任务：** [`integrations/harbor`](integrations/harbor/README.md) 中包含四个符合 schema 1.3 的任务，分别评测时点安全预测、时点查数、金融搜索证据与 A 股回测审计，并配有确定性 verifier。
 - **Codex skill：** [`skills/forecast-market-events`](skills/forecast-market-events/SKILL.md) 中包含可复用的预测工作流与输出协议。
 - **CI：** Python 3.10/3.12 测试、实时封存校验、skill 校验和 Markdown 链接检查。
 - **公开看板：** 无第三方前端依赖的 GitHub Pages 页面，展示实时截止时间和明确标注为合成数据的评分卡。

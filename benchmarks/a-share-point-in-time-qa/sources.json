@@ -1,0 +1,87 @@
+{
+  "benchmark": "a-share-point-in-time-qa-dev-v0.1",
+  "generated_on": "2026-08-13",
+  "publisher": "CNINFO",
+  "publisher_url": "https://www.cninfo.com.cn/",
+  "rights": {
+    "pdfs_redistributed": false,
+    "note": "This repository stores links, metadata, and factual labels only. Official filing PDFs are not redistributed."
+  },
+  "sources": [
+    {
+      "id": "cninfo-000333-2024-annual",
+      "security_code": "000333",
+      "company_name_zh": "美的集团股份有限公司",
+      "report_period": "2024",
+      "title": "2024年年度报告",
+      "published_date": "2025-03-29",
+      "url": "https://static.cninfo.com.cn/finalpage/2025-03-29/1222951181.PDF",
+      "announcement_id": "1222951181",
+      "bytes": 6737887,
+      "sha256": "b17a9b9b84bca1d2a4e4a3cadc5dd5ba5c85e3f1fd2d758acd3315b5b040ecd9",
+      "retrieved_date": "2026-08-13",
+      "authority": "primary",
+      "media_type": "application/pdf"
+    },
+    {
+      "id": "cninfo-000725-2024-annual",
+      "security_code": "000725",
+      "company_name_zh": "京东方科技集团股份有限公司",
+      "report_period": "2024",
+      "title": "2024年年度报告",
+      "published_date": "2025-04-22",
+      "url": "https://static.cninfo.com.cn/finalpage/2025-04-22/1223193313.PDF",
+      "announcement_id": "1223193313",
+      "bytes": 6124392,
+      "sha256": "a13a980ddbe73eb14809d83b15571db07dd97d918c5b388775ec6b71049e75ba",
+      "retrieved_date": "2026-08-13",
+      "authority": "primary",
+      "media_type": "application/pdf"
+    },
+    {
+      "id": "cninfo-002594-2024-annual",
+      "security_code": "002594",
+      "company_name_zh": "比亚迪股份有限公司",
+      "report_period": "2024",
+      "title": "2024年年度报告",
+      "published_date": "2025-03-25",
+      "url": "https://static.cninfo.com.cn/finalpage/2025-03-25/1222881496.PDF",
+      "announcement_id": "1222881496",
+      "bytes": 10092140,
+      "sha256": "e9c2d7fdd088e151ccb6c8ad3d95587b2b014b10f2c9731508d23ce07fde4de3",
+      "retrieved_date": "2026-08-13",
+      "authority": "primary",
+      "media_type": "application/pdf"
+    },
+    {
+      "id": "cninfo-300750-2024-annual",
+      "security_code": "300750",
+      "company_name_zh": "宁德时代新能源科技股份有限公司",
+      "report_period": "2024",
+      "title": "2024年年度报告",
+      "published_date": "2025-03-15",
+      "url": "https://static.cninfo.com.cn/finalpage/2025-03-15/1222806982.PDF",
+      "announcement_id": "1222806982",
+      "bytes": 2070073,
+      "sha256": "b4f1713d7b821eb076c102711d177fe942ccc2bc8dd171ae5d7a95799a65b0ad",
+      "retrieved_date": "2026-08-13",
+      "authority": "primary",
+      "media_type": "application/pdf"
+    },
+    {
+      "id": "cninfo-300760-2024-annual",
+      "security_code": "300760",
+      "company_name_zh": "深圳迈瑞生物医疗电子股份有限公司",
+      "report_period": "2024",
+      "title": "2024年年度报告",
+      "published_date": "2025-04-29",
+      "url": "https://static.cninfo.com.cn/finalpage/2025-04-29/1223371173.PDF",
+      "announcement_id": "1223371173",
+      "bytes": 8691816,
+      "sha256": "4bb8bfaa68fbbe2c9a07198a32e3228ecfcf067e1ddd42fa44fa52fdca63622b",
+      "retrieved_date": "2026-08-13",
+      "authority": "primary",
+      "media_type": "application/pdf"
+    }
+  ]
+}

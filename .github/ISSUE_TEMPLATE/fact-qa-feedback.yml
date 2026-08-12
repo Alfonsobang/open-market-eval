@@ -1,0 +1,49 @@
+name: Report a point-in-time QA label issue
+description: Challenge a value, unit, page, source seal, or task contract in the public filing QA pack.
+title: "[Fact QA]: "
+labels: ["point-in-time-qa", "data-quality"]
+body:
+  - type: input
+    id: task_id
+    attributes:
+      label: Task ID
+      placeholder: pit-300750-revenue-2024
+    validations:
+      required: true
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: Issue type
+      options:
+        - Reported value
+        - Declared unit or normalization
+        - Period or scope
+        - Physical PDF page
+        - Source URL, byte length, or SHA-256
+        - Question or output contract
+        - Other reproducibility issue
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Public evidence
+      description: Link the official filing and identify the page, table, row, or reproducible hash check that supports the correction.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Proposed correction
+      description: State the current field and the exact replacement or contract change.
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Data and claim boundaries
+      options:
+        - label: This report relies only on public evidence and contains no private company or real user data.
+          required: true
+        - label: This report makes no investment recommendation, price target, or performance claim.
+          required: true

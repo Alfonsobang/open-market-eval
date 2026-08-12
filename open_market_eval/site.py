@@ -6,6 +6,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from .fact_qa_site import render_fact_qa_lab
+from .io import read_jsonl
 from .research_site import render_research_audit_lab
 
 
@@ -181,7 +183,7 @@ def render_dashboard(
   </style>
 </head>
 <body>
-  <header><nav class="shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>OpenMarketEval <small>A-SHARE AGENT ARENA</small></a><div class="nav-links"><a href="#preflight">回测体检</a><a href="research-audit.html">证据审计</a><a href="#challenge">Agent 挑战</a><a href="#scoring">评分</a><a class="repo" href="https://github.com/Alfonsobang/open-market-eval">GitHub ↗</a></div></nav></header>
+  <header><nav class="shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>OpenMarketEval <small>A-SHARE AGENT ARENA</small></a><div class="nav-links"><a href="#preflight">回测体检</a><a href="research-audit.html">证据审计</a><a href="filing-qa.html">时点查数</a><a href="#challenge">Agent 挑战</a><a class="repo" href="https://github.com/Alfonsobang/open-market-eval">GitHub ↗</a></div></nav></header>
 
   <main id="top">
     <section class="hero"><div class="shell"><div class="hero-copy"><p class="eyebrow">A-SHARE AGENT ARENA · PRESEASON</p><h1>A 股研究 Agent 联赛</h1><p class="hero-lead"><strong>先体检你的回测，再让 Agent 上场。</strong><br>检查未来函数、股票池、复权价成交、T+1、涨跌停、交易成本与财务版本，然后用同一组陷阱比较任意 Agent。</p><div class="actions"><a class="button" href="#preflight">体检我的回测</a><a class="button secondary" href="#challenge">挑战 10 个案例</a></div><p class="hero-note">零上传 · 浏览器本地检查 · 无需 API Key · 不含荐股</p></div></div></section>
@@ -304,6 +306,13 @@ def build_site(
     (destination / "research-audit.html").write_text(
         render_research_audit_lab(safe_packet, risky_packet), encoding="utf-8"
     )
+    fact_root = root / "benchmarks" / "a-share-point-in-time-qa"
+    fact_tasks = read_jsonl(fact_root / "tasks.jsonl")
+    fact_labels = read_jsonl(fact_root / "labels.jsonl")
+    fact_sources = json.loads((fact_root / "sources.json").read_text(encoding="utf-8"))
+    (destination / "filing-qa.html").write_text(
+        render_fact_qa_lab(fact_tasks, fact_labels, fact_sources), encoding="utf-8"
+    )
     shutil.copyfile(image_path, assets / "a-share-arena-forensics.png")
     for name, value in (
         ("audit-dev-scorecard.json", audit_score),
@@ -316,6 +325,9 @@ def build_site(
             json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+    shutil.copyfile(fact_root / "tasks.jsonl", data / "fact-qa-tasks.jsonl")
+    shutil.copyfile(fact_root / "labels.jsonl", data / "fact-qa-labels.jsonl")
+    shutil.copyfile(fact_root / "sources.json", data / "fact-qa-sources.json")
     with (data / "live-questions.jsonl").open("w", encoding="utf-8", newline="\n") as handle:
         for question in questions:
             handle.write(json.dumps(question, sort_keys=True) + "\n")
